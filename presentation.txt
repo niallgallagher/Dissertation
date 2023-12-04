@@ -1,0 +1,25 @@
+--Presentation Overview First draft---
+Slide 1: Project Title
+What your project topic is (in general)
+Slide 2: Show MLS Player Injury
+Slide 3: Show Pitch Maps of Europe and USA (Talk about Studies in espn and other 
+What is/are your motivation to do this project topic
+Slide 4: Background about me on placement.
+Talk about the Pyshological Impact of pitch surfcae and relate it back to academy football
+in England
+The problems you are trying to solve.
+Trying to label and predict injury based on pitch surface with help from public info
+sources fbref and transfermarkt
+
+
+**Need to do this Month**
+The result of literature review (existing solutions or state-of-the-art solutions)
+
+Your project plan
+What you have done so far
+
+**January***
+Self Evaluation (are you behind or on-time with your own plan?) - if behind, why?
+What is your plan to complete the rest of the work.
+Conclusion
+
