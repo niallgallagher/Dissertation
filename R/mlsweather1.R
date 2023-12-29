@@ -847,3 +847,99 @@ sum(is.na(Stadium46$`is_day ()`))
 
 clipr::write_clip(fixture.final)
 
+
+
+#Joining Stadiums into Fixtures Data
+stadiums = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/Stadiums.xlsx')
+
+fixtures = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/FixtureComplete.xlsx')
+
+#assign match IDs to fixtures
+fixtures$MatchID <- substr(fixtures$MatchURL, 30, 37) 
+
+fixtures$Time <- substr(fixtures$Time, 12, 16)
+
+sort(unique(fixtures$Venue))
+
+
+#Assign Stadium IDs to fixtures data
+fixtures <- fixtures %>%
+  mutate(StadiumId = case_when(Venue == "Allianz Field" ~ 1, 
+                                    Venue == "Audi Field" ~ 2,
+                                    Venue == "Bank of America Stadium" ~ 4, 
+                                    Venue == "BBVA Stadium" ~ 5,
+                                    Venue == "BC Place" ~ 6,
+                                    Venue == "BMO Field" ~ 7,
+                                    Venue == "BMO Stadium" ~ 3,
+                                    Venue ==  "Bobby Dodd Stadium" ~ 8,
+                                    Venue == "Buck Shaw Stadium" ~ 9,
+                                    Venue == "Camping World Stadium" ~ 10,
+                                    Venue == "Children's Mercy Park" ~ 12,
+                                    Venue == "Citi Field Stadium" ~ 13,
+                                    Venue == "CityPark" ~ 47,
+                                    Venue == "Dick's Sporting Goods Park" ~ 14,
+                                    Venue == "Dignity Health Sports Park" ~ 15,
+                                    Venue == "DRV PNK Stadium" ~ 16,
+                                    Venue == "ESPN Wide World of Sports Complex" ~ 18,
+                                    Venue == "Exploria Stadium" ~ 19, 
+                                    Venue == "FedEx Field" ~ 20,
+                                    Venue == "GEODIS Park" ~ 21,
+                                    Venue == "Gillette Stadium" ~ 22,
+                                    Venue == "Historic Crew Stadium" ~ 23,
+                                    Venue ==  "Levi's Stadium" ~ 24,
+                                    Venue == "Lower.com Field" ~ 25,
+                                    Venue == "Lumen Field" ~ 11,
+                                    Venue == "Maryland SoccerPlex" ~ 26,
+                                    Venue == "Mercedes-Benz Stadium" ~ 27,
+                                    Venue == "Navy-Marine Corps Memorial Stadium" ~ 28,
+                                    Venue == "Nippert Stadium" ~ 29,
+                                    Venue == "Nissan Stadium" ~ 30,
+                                    Venue == "PayPal Park" ~ 17,
+                                    Venue == "Pratt & Whitney Stadium at Rentschler Field" ~ 31,
+                                    Venue == "Providence Park" ~ 32, 
+                                    Venue == "Q2 Stadium" ~ 33,
+                                    Venue == "Red Bull Arena" ~ 34,
+                                    Venue == "RFK Stadium" ~ 35,
+                                    Venue == "Rio Tinto Stadium" ~ 36,
+                                    Venue == "SeatGeek Stadium" ~ 37,
+                                    Venue == "Soldier Field" ~ 38,
+                                    Venue == "Stade Olympique" ~ 39,
+                                    Venue == "Stade Saputo" ~ 40,
+                                    Venue == "Stanford Stadium" ~ 41,
+                                    Venue == "Subaru Park" ~ 42,
+                                    Venue == "TCF Bank Stadium" ~ 43,
+                                    Venue == "Toyota Stadium" ~ 44,
+                                    Venue == "TQL Stadium" ~ 45,
+                                    Venue == "Yankee Stadium" ~ 46,
+                                   ))
+
+#Left join Stadiums
+fixtures <- fixtures %>% left_join(stadiums, by=c('StadiumId' = 'StadiumId'))
+
+#Selecting columns
+fixtures <- fixtures %>% select(1:5,7,8,9,34,10:16,18,36,35,37,38,42,22:33,20)
+
+clipr::write_clip(fixtures)
+
+agg_tbl <- fixtures %>% group_by(Season_End_Year,Surface) %>% 
+  summarise(total_count=n(),
+            .groups = 'drop')
+agg_tbl
+
+agg_tbl <- fixtures %>% group_by(Season_End_Year,Surface) %>% 
+  summarise(total_count=n(),.groups = 'drop') %>%
+  as.data.frame()
+agg_tbl
+
+
+agg_df <- aggregate(fixtures$Surface, by=list(fixtures$Season_End_Year,fixtures$Surface), FUN=length)
+
+#Line Chart of Graph
+library(ggplot2)
+library(dplyr)
+library(hrbrthemes)
+library(viridis)
+
+don <- agg_df %>% 
+  filter(Group.2 %in% c("Field Turf", "Grass"))
+

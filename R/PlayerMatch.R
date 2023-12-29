@@ -316,6 +316,9 @@ MLS.Player.Season.2015 <- df.season2015
 
 clipr::write_clip(MLS.Player.Season.2015)
 
+ederson_summary <- fb_player_match_logs("https://fbref.com/en/players/87f1f9b9/Alvaro-Rey", season_end_year = 2014, stat_type = 'summary')
+
+clipr::write_clip(ederson_summary)
 
 #2016 MLS Players Game Breakdown. 
 mls_2016_team_urls <- fb_teams_urls("https://fbref.com/en/comps/22/2016/2016-Major-League-Soccer-Stats")
@@ -834,6 +837,9 @@ for (i in 1:length(avector2023part2)) {
 
 #ederson_summary <- fb_player_match_logs("https://fbref.com/en/players/73fdc4c2/Ian-Harkes", season_end_year = 2023, stat_type = 'passing')
 #ederson_summary2 <- fb_player_match_logs("https://fbref.com/en/players/1bb2acce/Paul-Arriola", season_end_year = 2023, stat_type = 'summary')
+#ederson_summary2 <- fb_player_season_stats("https://fbref.com/en/players/73fdc4c2/Ian-Harkes", stat_type = "playing_time")
+clipr::write_clip(ederson_summary2)
+
 
 length(unique(mls_2023.Players$Player))
 
@@ -862,3 +868,371 @@ length(unique(mls_2023.Players$Player))
 length(unique(df.season2023$player_name))
 
 clipr::write_clip(df.season2023)
+
+#################################
+#Binding My Data Together Player's Seasons
+library(readxl)
+#2012
+#Load 2012 MLS Players
+mls.players.season.2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2012PlayerSeason.xlsx')
+
+#Load 2013 MLS Players
+mls.players.season.2013 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2013PlayerSeason.xlsx')
+
+mergeplayerseason2012.2013 <- rbind(mls.players.season.2012, mls.players.season.2013)
+
+mls.seasonsplayers2012_13 <- mergeplayerseason2012.2013[!duplicated(mergeplayerseason2012.2013), ]
+
+#Load 2014 MLS Players
+mls.players.season.2014 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2014PlayerSeason.xlsx')
+
+mergeplayerseason2012.2014 <- rbind(mls.seasonsplayers2012_13, mls.players.season.2014)
+
+mls.seasonsplayers2012_14 <- mergeplayerseason2012.2014[!duplicated(mergeplayerseason2012.2014), ]
+
+#Load 2015 MLS Players
+mls.players.season.2015 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2015PlayerSeason.xlsx')
+
+mergeplayerseason2012.2015 <- rbind(mls.seasonsplayers2012_14, mls.players.season.2015)
+
+mls.seasonsplayers2012_15 <- mergeplayerseason2012.2015[!duplicated(mergeplayerseason2012.2015), ]
+
+#Load 2015 MLS Players
+mls.players.season.2015 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2015PlayerSeason.xlsx')
+
+mergeplayerseason2012.2015 <- rbind(mls.seasonsplayers2012_14, mls.players.season.2015)
+
+mls.seasonsplayers2012_15 <- mergeplayerseason2012.2015[!duplicated(mergeplayerseason2012.2015), ]
+
+#Load 2016 MLS Players
+mls.players.season.2016 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2016PlayerSeason.xlsx')
+
+mergeplayerseason2012.2016 <- rbind(mls.seasonsplayers2012_15, mls.players.season.2016)
+
+mls.seasonsplayers2012_16 <- mergeplayerseason2012.2016[!duplicated(mergeplayerseason2012.2016), ]
+
+#Load 2017 MLS Players
+mls.players.season.2017 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2017PlayerSeason.xlsx')
+
+mergeplayerseason2012.2017 <- rbind(mls.seasonsplayers2012_16, mls.players.season.2017)
+
+mls.seasonsplayers2012_17 <- mergeplayerseason2012.2017[!duplicated(mergeplayerseason2012.2017), ]
+
+
+#Load 2018 MLS Players
+mls.players.season.2018 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2018PlayerSeason.xlsx')
+
+mergeplayerseason2012.2018 <- rbind(mls.seasonsplayers2012_17, mls.players.season.2018)
+
+mls.seasonsplayers2012_18 <- mergeplayerseason2012.2018[!duplicated(mergeplayerseason2012.2018), ]
+
+#Load 2019 MLS Players
+mls.players.season.2019 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2019PlayerSeason.xlsx')
+
+mergeplayerseason2012.2019 <- rbind(mls.seasonsplayers2012_18, mls.players.season.2019)
+
+mls.seasonsplayers2012_19 <- mergeplayerseason2012.2019[!duplicated(mergeplayerseason2012.2019), ]
+
+
+#Load 2020 MLS Players
+mls.players.season.2020 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2020PlayerSeason.xlsx')
+
+mergeplayerseason2012.2020 <- rbind(mls.seasonsplayers2012_19, mls.players.season.2020)
+
+mls.seasonsplayers2012_20 <- mergeplayerseason2012.2020[!duplicated(mergeplayerseason2012.2020), ]
+
+
+#Load 2021 MLS Players
+mls.players.season.2021 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2021PlayerSeason.xlsx')
+
+mergeplayerseason2012.2021 <- rbind(mls.seasonsplayers2012_20, mls.players.season.2021)
+
+mls.seasonsplayers2012_21 <- mergeplayerseason2012.2021[!duplicated(mergeplayerseason2012.2021), ]
+
+#Load 2022 MLS Players
+mls.players.season.2022 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2022PlayerSeason.xlsx')
+
+mergeplayerseason2012.2022 <- rbind(mergeplayerseason2012.2021, mls.players.season.2022)
+
+mls.seasonsplayers2012_22 <- mergeplayerseason2012.2022[!duplicated(mergeplayerseason2012.2022), ]
+
+
+#Load 2020 MLS Players
+mls.players.season.2023 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2023PlayerSeason.xlsx')
+
+mergeplayerseason2012.2023 <- rbind(mls.seasonsplayers2012_22, mls.players.season.2023)
+
+mls.seasonsplayers2012_23 <- mergeplayerseason2012.2023[!duplicated(mergeplayerseason2012.2023), ]
+
+mlscareer <- mls.seasonsplayers2012_23
+
+# mlscareer2 <- mlscareer %>%  
+#   group_by(player_url)  %>%  
+# distinct(Season, Comp, .keep_all = TRUE)
+
+
+mlscareer2 <- mlscareer[-which(is.na(mlscareer$Comp)),]
+
+mlscareer2 <- mlscareer2[grepl("/", mlscareer2$player_url),]
+
+mlscareer2$PlayerId <- substr(mlscareer2$player_url, 30, 37)
+
+
+#*Note performing Cleanse of Data set
+library(dplyr)
+#library(plyr) 
+
+sort(unique(mlscareer$Season))
+
+
+mlscareer2 <- mlscareer2 %>%
+  group_by(player_url) %>%
+  dplyr::mutate(SeasonNumber = dense_rank(Age))
+
+
+mlscareerfinal <- mlscareer2 %>%
+  group_by(player_url) %>%
+  arrange(SeasonNumber) %>%
+  dplyr::mutate(CountComp = row_number())
+
+# Specify the string you want to find and keep values before
+target_string <- "1. MLS"
+
+# Use dplyr to filter rows based on the condition within each group
+result_df <- mlscareerfinal %>%
+  group_by(player_url) %>%
+  filter(CountComp <= max(which(Comp == target_string)))
+
+# Print the result
+print(result_df)
+
+# result_df <- result_df[!duplicated(result_df), ]
+# 
+# result_df <- result_df %>%  
+#    group_by(player_url)  %>%  
+#   distinct(Season, Comp,Squad, .keep_all = TRUE)
+
+clipr::write_clip(result_df)
+
+
+#Loading PlayerMatches 2012
+mls.players.games.2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2012.xlsx')
+
+mls.players.games.2012 <- mls.players.games.2012 %>%
+  group_by(Player)  %>%
+distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2012 <- mls.players.games.2012 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+#Load 2013 MLS Players
+mls.players.games.2013 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2013.xlsx')
+
+mls.players.games.2013 <- mls.players.games.2013 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2013 <- mls.players.games.2013 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2013 <- rbind(mls.players.games.2012, mls.players.games.2013)
+
+#Load 2014 MLS Players
+mls.players.games.2014 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2014.xlsx')
+
+mls.players.games.2014 <- mls.players.games.2014 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2014 <- mls.players.games.2014 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2014 <- rbind(mergeplayergames2012.2013, mls.players.games.2014)
+
+
+#Load 2015 MLS Players
+mls.players.games.2015 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2015.xlsx')
+
+mls.players.games.2015 <- mls.players.games.2015 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2015 <- mls.players.games.2015 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2015 <- rbind(mergeplayergames2012.2014, mls.players.games.2015)
+
+#Load 2016 MLS Players
+mls.players.games.2016 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2016.xlsx')
+
+mls.players.games.2016 <- mls.players.games.2016 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2016 <- mls.players.games.2016 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+mls.players.games.2016$Season <- as.character(mls.players.games.2016$Season)
+
+mergeplayergames2012.2016 <- rbind(mergeplayergames2012.2015, mls.players.games.2016)
+
+#Load 2017 MLS Players
+mls.players.games.2017 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2017.xlsx')
+
+mls.players.games.2017 <- mls.players.games.2017 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2017 <- mls.players.games.2017 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2017 <- rbind(mergeplayergames2012.2016, mls.players.games.2017)
+
+#Load 2018 MLS Players
+mls.players.games.2018 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2018.xlsx')
+
+mls.players.games.2018 <- mls.players.games.2018 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2018 <- mls.players.games.2018 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2018 <- rbind(mergeplayergames2012.2017, mls.players.games.2018)
+
+#Load 2019 MLS Players
+mls.players.games.2019 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2019.xlsx')
+
+mls.players.games.2019 <- mls.players.games.2019 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2019 <- mls.players.games.2019 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2019 <- rbind(mergeplayergames2012.2018, mls.players.games.2019)
+
+#Load 2013 MLS Players
+mls.players.games.2020 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2020.xlsx')
+
+mls.players.games.2020 <- mls.players.games.2020 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2020 <- mls.players.games.2020 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2020 <- rbind(mergeplayergames2012.2019, mls.players.games.2020)
+
+#Load 2021 MLS Players
+mls.players.games.2021 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2021.xlsx')
+
+mls.players.games.2021 <- mls.players.games.2021 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2021 <- mls.players.games.2021 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2021 <- rbind(mergeplayergames2012.2020, mls.players.games.2021)
+
+#Load 2022 MLS Players
+mls.players.games.2022 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2022.xlsx')
+
+mls.players.games.2022 <- mls.players.games.2022 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2022 <- mls.players.games.2022 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2022 <- rbind(mergeplayergames2012.2021, mls.players.games.2022)
+
+
+#Load 2023 MLS Players
+mls.players.games.2023 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2023.xlsx')
+
+mls.players.games.2023 <- mls.players.games.2023 %>%
+  group_by(Player)  %>%
+  distinct(Date, Comp, .keep_all = TRUE)
+
+mls.players.games.2023 <- mls.players.games.2023 %>%
+  group_by(Player) %>%
+  dplyr::mutate(Games = row_number(),Season_Mins = cumsum(Min))
+
+
+mergeplayergames2012.2023 <- rbind(mergeplayergames2012.2022, mls.players.games.2023)
+
+
+clipr::write_clip(mergeplayergames2012.2023)
+
+#Work On Player Key 
+playerkey = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerKey.xlsx')
+
+playerkey <- playerkey[order(playerkey$player_name),]
+
+
+playerfbref <- mls.seasonsplayers2012_23 %>% select(1,2)
+
+
+playerfbref <- trial[!duplicated(trial), ]
+
+
+trial <- dplyr::filter(playerfbref, grepl("/",player_url))
+
+playerfbref <- playerfbref[order(playerfbref$player_name),]
+
+
+clipr::write_clip(playerfbref)
+
+df2 <- playerkey %>% left_join( playerfbref, 
+                             by=c('player_name'='player_name'))
+
+
+sapply(df2, function(x) sum(is.na(x)))
+
+sapply(playerkey, function(x) sum(is.na(x)))
+
+
+playerbio = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerWeight.xlsx')
+
+playerbio <- playerbio %>% 
+  rename(PlayerTm = 1, DOBTm = 2)
+
+#playertest <- playerbio %>% select(1,2)
+
+
+test <- left_join(playerkey, playerbio, by='PlayerId','date_of_birth')
+
+test <- test[order(test$PlayerNumber),]
+
+clipr::write_clip(test)
+
+nrow(playerkey[duplicated(playerkey), ])
+
+sum(duplicated(playerkey$PlayerFBref))
+
+duplicates <- playerkey[duplicated(playerkey$URL), ]
+
+duplicates2 <- playerkey[duplicated(playerkey$PlayerFBref), ]
+

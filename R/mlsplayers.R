@@ -4,6 +4,7 @@
 library(dplyr)
 library(tidyverse)
 library(worldfootballR)
+library(readxl)
 #Load 2012 MLS Players
 mls.players2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/Bio/league2012PlayerBio.xlsx')
 
@@ -201,20 +202,18 @@ trialKey <- mls.key.player %>% left_join(mapped_players,
                                          by=c('URL'='UrlTmarkt'))
 
 sum(is.na(trialKey$PlayerFBref))
-
-
-kay.sheet <- mls.players2012_23[,c(1,3,7,27)]
-
 clipr::write_clip(trialKey)
 
 
 clipr::write_clip(mls.players2012_23)
 
-#Trimming down data.
+#Performing data cleanse of the dataset.
+mls.players2012_2023 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Player2012_2023.xlsx')
 
+#Trimming down data.
 library(stringr)
 
-mls.test <- mls.players2012_23 %>% select(27,1,3,5,6,8,21,10,20)
+mls.test <- mls.players2012_2023 %>% select(27,1,3,5,6,8,21,20)
 
 
 #Create a position group. 
@@ -222,10 +221,7 @@ sort(unique(mls.test$position))
 
 #Create a Case When
 
-
-
-
-test <- mls.test %>%
+mls.test <- mls.test %>%
   mutate(Position_Group = case_when(position == "Attack" ~ 'Striker', 
                                     position == "Attack - Centre-Forward" ~ 'Striker',
                                     position == "Attack - Second Striker" ~ 'Striker',
@@ -243,7 +239,7 @@ test <- mls.test %>%
                                     position == "midfield - Right Midfield" ~ 'Side Midfielder',
                                     position == "midfield - Left Midfield" ~ 'Side Midfielder'))
 
-test2 <- test %>%
+mls.test <- mls.test %>%
   mutate(Main_Position = case_when(position =="Attack" ~ 'Centre-Forward', 
                                     position == "Attack - Centre-Forward" ~ 'Centre-Forward',
                                     position == "Attack - Second Striker" ~ 'Second Striker',
@@ -261,4 +257,60 @@ test2 <- test %>%
                                     position == "midfield - Right Midfield" ~ 'Right Midfielder',
                                     position == "midfield - Left Midfield" ~ 'Left Midfielder'))
 
-# To DO. Reassign players with distribution of feet                      
+# To DO. Reassign players with distribution of feet  
+mls.test <- mls.test %>% select(1,2,3,4,5,6,7,10,9,8)
+
+sum(!complete.cases(mls.test$foot))
+
+count(mls.test, foot)
+
+
+mls.playersweights = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerWeightsUpdated.xlsx')
+
+mls.players <- mls.playersweights %>% left_join(mls.test, by=c('PlayerId' = 'PlayerId',
+                                                               'URL' = 'URL',
+                                                               'PlayerTm' = 'player_name'))
+
+count(mls.players, foot)
+
+sum(!complete.cases(mls.players$height))
+
+mls.players
+# Creating a sample data frame
+#df <- data.frame(column_name = c('A', 'B', 'A', 'B', 'A', 'C', NA, 'B', 'C', NA))
+
+# Calculate the distribution of strings in the column
+string_distribution <- table(mls.players$foot) / length(mls.players$foot)
+
+# Function to fill NAs with random strings based on distribution
+fill_na_random <- function(x) {
+  if (is.na(x)) {
+    return(sample(names(string_distribution), 1, prob = string_distribution))
+  } else {
+    return(x)
+  }
+}
+
+# Apply the function to fill NAs in the column
+mls.players$foot <- sapply(mls.players$foot, fill_na_random)
+
+#Removing Unnecessary columns r
+mls.players <- mls.players %>% select(2,3,4,9,6,10,13,14,1)
+
+
+clipr::write_clip(mls.players)
+
+#Chart of Player Positions in the dataset.
+test <- count(mls.players, Position_Group)
+
+
+
+test %>% 
+     ggplot(aes(x = Position_Group, y = n)) +
+     geom_col(mapping = aes(x=Position_Group, y=n), fill = c("black","purple","bisque3","red","pink","green","lightblue")) +
+     scale_y_continuous(breaks = seq(0, 650, by=50)) +
+     labs(x = "Player Positions", y = "Number of Players", title = "Bar Chart of Player Positions", subtitle = "MLS Players") +
+     geom_text(aes(label= n), vjust=1.2, size=3, col = "white") +
+     theme_bw()  +
+     guides(x = guide_axis(angle = 90))
+
