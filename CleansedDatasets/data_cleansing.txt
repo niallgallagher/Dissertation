@@ -1,0 +1,20 @@
+**Data Cleansing time**
+**Combine Player Careers***
+- Remove Careers after MLS
+
+
+
+**Injuries**
+- Remove Injuries after last MLS Season
+- Remove illnesses, colds, coronavirus, quarantine etc. 
+- Change Rest to Fitness
+- Create Injury Sub-group
+- Count Injuries by Date 
+- Label Encode Injuries based on Recovery time.
+- Count Injury per player
+
+
+**Player Fixtures**
+- Combine Together
+- Create New table That Encompassess all my data. (Player Bio, Injuries, Fixtures and Season)
+- Count games per season in MLS.
