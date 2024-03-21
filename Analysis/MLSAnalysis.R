@@ -14,6 +14,9 @@ mls.player.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation
 
 names(mls.injury.fixtures) <- gsub("\\.x", "", names(mls.injury.fixtures))
 
+names(mls.player.fixtures) <- gsub("\\.x", "", names(mls.player.fixtures))
+
+
 mls.injury.fixtures <- mls.injury.fixtures[mls.injury.fixtures$injury != "Ill" & mls.injury.fixtures$injury != "Corona virus", ]
 
 
@@ -67,11 +70,6 @@ stad <- dplyr::count(mls.fixtures, `Stadium Name`)
 
 dplyr::count(mls.injury.fixtures, Position_Group)
 
-mls.fixtures$absolute_difference <- abs(mls.fixtures$HomeGoals - mls.fixtures$AwayGoals)
-mls.injury.fixtures$absolute_difference <- abs(mls.injury.fixtures$HomeGoals - mls.injury.fixtures$AwayGoals)
-
-dplyr::count(mls.fixtures, absolute_difference)
-dplyr::count(mls.injury.fixtures, absolute_difference)
 
 dplyr::count(mls.injury.fixtures, Surface)
 dplyr::count(mls.fixtures, Surface)
@@ -179,10 +177,27 @@ pt2 <- mls.injury.fixtures %>%
   geom_line(colour = plot_cols[2], size = 1) +
   geom_point(colour = plot_cols[2], size = 3) +
   labs(x= "Game Number", y= "Number Injuries") +
+  ggtitle("NUMBER OF INJURIES DECREASING THROUGH GAMES", subtitle = "Week 10 has the most injuries (n=46)") 
+  theme_niall() +
+  scale_x_continuous(breaks = seq(0, 35, by = 5)) +
+  scale_y_continuous(breaks = seq(0, 50, by = 5))
+
+
+pt3 <- mls.injury.fixtures %>% 
+  filter(Games < 35) %>% 
+  group_by(Games, Surface) %>% 
+  summarise(num_players = n_distinct(PlayerId)) %>% 
+  ggplot(aes(x = Games, y = num_players, color = Surface, group = Surface)) +
+  geom_line(size = 1) +
+  geom_point(size = 3) +
+  labs(x = "Game Number", y = "Number Injuries") +
   ggtitle("NUMBER OF INJURIES DECREASING THROUGH GAMES", subtitle = "Week 10 has the most injuries (n=46)") +
   theme_niall() +
   scale_x_continuous(breaks = seq(0, 35, by = 5)) +
   scale_y_continuous(breaks = seq(0, 50, by = 5))
+
+
+
 
 test <- select(mls.injury.fixtures,`Min`)
 
@@ -506,3 +521,426 @@ gridExtra::grid.arrange(w1, w2, w3, w4, w5,w6, nrow = 3)
    facet_wrap(~ MatchInjury) +  # Facet based on MatchInjury
    theme_bw()
  
+ #ABS
+ mls.fixtures$absolute_difference <- abs(mls.fixtures$HomeGoals - mls.fixtures$AwayGoals)
+ mls.injury.fixtures$absolute_difference <- abs(mls.injury.fixtures$HomeGoals - mls.injury.fixtures$AwayGoals)
+ 
+ dplyr::count(mls.fixtures, absolute_difference)
+ dplyr::count(mls.injury.fixtures, absolute_difference)
+ 
+ 
+ abs1 <- mls.injury.fixtures %>% 
+   group_by(absolute_difference) %>% 
+   count(absolute_difference)
+ 
+ new_row <- data.frame(
+   absolute_difference = 6,
+   n = 0
+ )
+ 
+ insert_index <- 7
+ 
+ # Split the dataframe into two parts
+ df_above <- abs1[1:(insert_index - 1), ]
+ df_below <- abs1[insert_index:nrow(abs1), ]
+ 
+ # Combine the two parts with the new row inserted in between
+ abs1 <- rbind(df_above, new_row, df_below)
+ 
+ # Reset row names
+ #rownames(abs1) <- NULL
+ 
+ #abs1 <- rbind(abs1,new_row) 
+ 
+ 
+ abs2 <- mls.fixtures %>% 
+   group_by(absolute_difference) %>% 
+   count(absolute_difference)
+
+ abs2 <- na.omit(abs2)
+ 
+mls.scores <- cbind(abs1,abs2) 
+
+mls.scores <- select(mls.scores,1,2,4)
+
+colnames(mls.scores) <- c("Absolute_Goal_Difference", "Injury_Count","Total_Games")
+
+mls.scores$Injury_Percentage <- (mls.scores$Injury_Count / mls.scores$Total_Games) * 100
+
+mls.scores$Absolute_Goal_Difference <- as.character(mls.scores$Absolute_Goal_Difference)
+
+mls.scores %>% 
+  ggplot(aes(x= Absolute_Goal_Difference, y= Injury_Percentage)) +
+  geom_col(fill = plot_cols[6], colour = plot_cols[6], alpha = 0.6) +
+  geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")), vjust = -0.5, size = 3, color = "black") +  # Add percentages on bars
+  labs(x= "Absolute Goal Difference", y= "Percentage of Injuries") +
+  ggtitle("Breakdown of MLS Injuries Based on Game Situation", subtitle = "The relationship Between Goal Difference and Injury\nDoesn't look to be significant") +
+  theme_niall() 
+  
+
+mls.home.away <- mls.injury.fixtures$Away
+mls.home.surface <- mls.injury.fixtures$Surface
+
+
+mls.home.away <- data.frame(mls.home.away,
+                            mls.home.surface)
+
+test <-  mls.home.away %>%
+  mutate(HomeVsAway = case_when(mls.home.away  != "NA"  ~ "Home",
+                                             TRUE ~ "Away"))
+
+dplyr::count(test, HomeVsAway)
+
+dplyr::count(test, mls.home.surface)
+
+trial <- test %>% 
+  group_by(mls.home.surface) %>% 
+  count(HomeVsAway)
+
+
+trial$SurfaceGames <- c(227,227,630,630,82,82)
+
+colnames(trial) <- c("SurfaceType", "HomeVsAway","InjuryCount","SurfaceGames")
+
+trial$Injury_Percentage <- (trial$InjuryCount / trial$SurfaceGames) * 100
+
+
+trial %>%
+  ggplot(aes(x = SurfaceType, y = Injury_Percentage, fill = HomeVsAway)) +
+  geom_bar(stat = "identity", position = "stack") +
+  geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")),
+            position = position_stack(vjust = 0.5),  # Position text at the center of each segment
+            size = 6, color = "black") +  # Add percentages on bars
+  labs(x = "Surface Type", y = "Percentage of Injuries") +
+  ggtitle("Breakdown of MLS Injuries Based on Team's Surface Type",
+          subtitle = "The Stacked Bar chart shows a signifcant difference in Injury Percentage \nwith teams who play most games on Field Turf") +
+  theme_niall() 
+
+stad <- dplyr::count(mls.injury.fixtures, `Stadium Name`)
+
+
+stad <- dplyr::count(mls.injury.fixtures, `Stadium Name`)
+
+stad.fix <- dplyr::count(mls.fixtures, `Stadium Name`)
+
+stad.surf <- select(mls.injury.fixtures,23,25 )
+
+stadium <- left_join(stad, stad.fix, by = "Stadium Name")
+
+stadium <- left_join(stadium, stad.surf, by = "Stadium Name")
+
+stadium <- unique(stadium)
+
+colnames(stadium) <- c("Stadium Name", "Injury_Count","Games","Surface")
+
+
+
+stadium$Injury_Percentage <- (stadium$Injury_Count / stadium$Games) * 100
+
+#mls.scores$Absolute_Goal_Difference <- as.character(mls.scores$Absolute_Goal_Difference)
+
+stadium %>% 
+  ggplot(aes(x= stadium, y= Injury_Percentage, fill = surface)) +
+  geom_col(fill = plot_cols[6], colour = plot_cols[6], alpha = 0.6) +
+  geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")), vjust = -0.5, size = 3, color = "black") +  # Add percentages on bars
+  labs(x= "Absolute Goal Difference", y= "Percentage of Injuries") +
+  ggtitle("Breakdown of MLS Injuries Based on Game Situation", subtitle = "The relationship Between Goal Difference and Injury\nDoesn't look to be significant") +
+  theme_niall() 
+
+stadium <- stadium %>% 
+  filter(Games > 15)
+
+clipr::write_clip(stadium)
+
+
+top_stadiums <- head(stadium[order(-stadium$Injury_Percentage),], 8)
+
+# Create the bar plot
+stad1 <- ggplot(top_stadiums, aes(x = reorder(`Stadium Name`, Injury_Percentage), y = Injury_Percentage, fill = Surface)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")), vjust = -0.5, size = 6, color = "black") +  # Add percentages on bars
+  scale_fill_manual(values = c("Grass" = "green", "Field Turf" = "darkgreen", "Hybrid" = "#AFE1AF")) +
+  labs(x = "Stadium Name", y = "Injury Percentage (%)", fill = "Surface") +  # Add "%" to the y-axis label
+  ggtitle("Top 8 Stadiums by Injury Percentage (2012-2023)") +
+  theme_niall() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+#stadium2 <- subset(stadium, `Stadium Name` %in% c("Camping World Stadium", "TCF Bank Stadium"))
+
+stadium2 <- subset(stadium, !(grepl("Camping World Stadium", `Stadium Name`, ignore.case = TRUE) | grepl("TCF Bank Stadium", `Stadium Name`, ignore.case = TRUE)))
+
+stadium2 <- head(stadium2[order(-stadium2$Injury_Percentage),], 8)
+
+
+stad2 <- ggplot(stadium2, aes(x = reorder(`Stadium Name`, Injury_Percentage), y = Injury_Percentage, fill = Surface)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")), vjust = -0.5, size = 6, color = "black") +  # Add percentages on bars
+  scale_fill_manual(values = c("Grass" = "green", "Field Turf" = "darkgreen", "Hybrid" = "#AFE1AF")) +
+  labs(x = "Stadium Name", y = "Injury Percentage (%)", fill = "Surface") +  # Add "%" to the y-axis label
+  ggtitle("Top 8 Stadiums by Injury Percentage (Active)") +
+  theme_niall() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+###############################Trial#############################################
+# Assuming you have a data frame called player_data with columns: PlayerID, Surface, GamesPlayed
+# Assuming you have a data frame called player_data with columns: PlayerID, Surface
+
+# Count the number of games played per player ID
+games_played_per_player_surface <- mls.player.fixtures %>%
+  group_by(URL,Surface) %>%
+  summarize(GamesPlayed = n())
+
+# Filter data for grass surface
+grass_surface_data <- subset(mls.player.fixtures, Surface == "Grass")
+
+# Filter data for field turf surface
+turf_surface_data <- subset(mls.player.fixtures, Surface == "Field Turf")
+
+# Aggregate data to get count of games played by each player on grass surface
+grass_player_counts <- aggregate(Surface ~ URL, data = grass_surface_data, FUN = length)
+
+# Aggregate data to get count of games played by each player on field turf surface
+turf_player_counts <- aggregate(Surface ~ URL, data = turf_surface_data, FUN = length)
+
+# Calculate total games played by each player
+total_games_per_player <- aggregate(Surface ~ URL, data = mls.player.fixtures, FUN = length)
+
+# Define the majority criteria for grass and turf
+majority_threshold_grass <- total_games_per_player$Surface * 0.5  # Considering majority as more than half
+majority_threshold_turf <- total_games_per_player$Surface * 0.5  # Considering majority as more than half
+
+# Find players who played the majority of games on grass
+players_majority_grass <- grass_player_counts$URL[grass_player_counts$Surface > majority_threshold_grass]
+
+# Find players who played the majority of games on field turf
+players_majority_turf <- turf_player_counts$URL[turf_player_counts$Surface > majority_threshold_turf]
+
+# Subset data based on whether they played the majority of games on grass or field turf
+players_majority_grass_data <- subset(mls.player.fixtures, URL %in% players_majority_grass)
+players_majority_turf_data <- subset(mls.player.fixtures, URL %in% players_majority_turf)
+
+# Output the subsets
+print("Players who played the majority of games on grass:")
+print(players_majority_grass_data)
+
+print("Players who played the majority of games on field turf:")
+print(players_majority_turf_data)
+
+
+
+
+
+
+
+
+
+
+majority_surface <- games_played_per_player_surface %>%
+  group_by(URL) %>%
+  summarize(MajoritySurface = Surface[which.max(GamesPlayed)])
+
+# Filter URLs where the majority is Field Turf
+urls_majority_field_turf <- majority_surface %>%
+  filter(MajoritySurface == "Field Turf") %>%
+  pull(URL)
+
+# Filter original data frame to keep only URLs with majority Field Turf
+filtered_data <- games_played_per_player_surface %>%
+  filter(URL %in% urls_majority_field_turf)
+
+# Print the filtered data
+print(filtered_data)
+
+
+
+urls_majority_hybrid <- majority_surface %>%
+  filter(MajoritySurface == "Hybrid") %>%
+  pull(URL)
+
+filtered_data2 <- games_played_per_player_surface %>%
+  filter(URL %in% urls_majority_hybrid)
+
+
+
+urls_majority_grass <- majority_surface %>%
+  filter(MajoritySurface == "Grass") %>%
+  pull(URL)
+
+
+
+filtered_data3 <- games_played_per_player_surface %>%
+  filter(URL %in% urls_majority_grass)
+
+
+
+filtered_data <- filtered_data %>%
+  filter(GamesPlayed > 10)
+
+
+filtered_data2 <- filtered_data2 %>%
+  filter(GamesPlayed > 10)
+
+
+filtered_data3 <- filtered_data3 %>%
+  filter(GamesPlayed > 10)
+
+
+filtered_data3 <- filtered_data3[complete.cases(filtered_data3),]
+
+unique_values <- unique(filtered_data$URL)
+unique_values2 <- unique(filtered_data2$URL)
+unique_values3 <- unique(filtered_data3$URL)
+
+
+grass.matches <- mls.player.fixtures %>%
+  filter(URL %in% unique_values3)
+
+grass.matches$game_injury <- ifelse(is.na(grass.matches$injury), 0, 1)
+
+grass.matches$Date <- as.Date(grass.matches$Date)
+
+grass.matches <- grass.matches %>%
+  arrange(Date) %>%
+  group_by(Date, MatchID) %>%
+  mutate(Game_Number = cur_group_id())
+
+turf.matches <- mls.player.fixtures %>%
+  filter(URL %in% unique_values)
+
+turf.matches$game_injury <- ifelse(is.na(turf.matches$injury), 0, 1)
+
+turf.matches$Date <- as.Date(turf.matches$Date)
+
+turf.matches <- turf.matches %>%
+  arrange(Date) %>%
+  group_by(Date, MatchID) %>%
+  mutate(Game_Number = cur_group_id())
+
+
+hybrid.matches <- mls.player.fixtures %>%
+  filter(URL %in% unique_values2)
+
+turf.matches$Percent <- 100
+
+# Function to update Percent based on Injury
+update_percent <- function(turf.matches) {
+  # Initialize percent_remaining as 100
+  percent_remaining <- 100
+  
+  # Loop through each row
+  for (i in 1:nrow(turf.matches)) {
+    # If Injury is 1, decrease percent_remaining by 20 (assuming 20% decrement)
+    if (turf.matches$game_injury[i] == 1) {
+      percent_remaining <- percent_remaining - ((1/n_distinct(turf.matches$URL))*100)
+    }
+    # Update Percent column with percent_remaining value
+    turf.matches$Percent[i] <- percent_remaining
+  }
+  
+  return(turf.matches)
+}
+
+# Update Percent column based on Injury
+turf.matches <- update_percent(turf.matches)
+
+
+
+highest_game_number_per_percentage <- function(turf.matches) {
+  result <- aggregate(Game_Number ~ Percent, turf.matches, max)
+  return(result)
+}
+
+highest_game_numbers <- highest_game_number_per_percentage(turf.matches)
+print(highest_game_numbers)
+
+# Sort the data by Game_Number in ascending order and then by Percent in ascending order
+df <- highest_game_numbers[order(highest_game_numbers$Game_Number, highest_game_numbers$Percent), ]
+
+# Keep the first occurrence of each Game_Number
+df <- df[!duplicated(df$Game_Number), ]
+
+print(df)
+
+# Print the updated dataframe
+head(highest_game_numbers)
+
+#grass.Kaplan <- df
+
+#turf.Kaplan <- df
+
+grass.Kaplan <- grass.Kaplan %>% filter(Game_Number < 3000)
+
+string_to_replicate <- "Grass"
+
+# Replicate the string for each row and assign it to a new column
+grass.Kaplan$Surface <- rep(string_to_replicate, nrow(grass.Kaplan))
+
+
+string_to_replicate <- "Field Turf"
+
+new_row <- data.frame(
+  Percent = 51.59420, 
+  Game_Number = 3000,
+  Surface = "Field Turf"
+)
+  
+turf.Kaplan <- rbind(turf.Kaplan, new_row)
+
+# Replicate the string for each row and assign it to a new column
+turf.Kaplan$Surface <- rep(string_to_replicate, nrow(turf.Kaplan))
+
+
+# Stacked area chart
+ggplot() +
+  geom_area(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, fill = Surface), 
+            position = "stack") +
+  scale_fill_manual(values = c("Grass" = "red", "Field Turf" = "blue")) +  # Custom colors
+  theme_niall() +
+  labs(x = "X-axis Label", y = "Y-axis Label", title = "Stacked Area Chart")
+
+
+
+# Assuming you have grass.Kaplan and turf.Kaplan data frames
+datadata = rbind(grass.Kaplan, turf.Kaplan)
+ggplot() +
+  geom_area(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, fill = Surface), 
+            position = "identity", alpha = 0.8) +  # Alpha controls transparency
+  geom_line(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, color = Surface)) +
+  scale_fill_manual(values = c("Grass" = "red", "Field Turf" = "black")) +  # Custom colors for area
+  scale_color_manual(values = c("Grass" = "red", "Field Turf" = "black")) +  # Custom colors for line
+  theme_niall() +
+  labs(x = "X-axis Label", y = "Y-axis Label", title = "Line Area Chart")
+
+ggplot(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, fill = Surface)) +
+  geom_area()
+
+
+
+
+ggplot() +
+  geom_area(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, fill = Surface), 
+            position = "identity", alpha = 0.5) +  # Alpha controls transparency
+  geom_line(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, color = Surface)) +
+  scale_fill_manual(values = c("Grass" = "#4daf4a", "Field Turf" = "#e41a1c")) +  # Custom colors for area
+  scale_color_manual(values = c("Grass" = "#4daf4a", "Field Turf" = "#e41a1c")) +  # Custom colors for line
+  #scale_linetype_manual(values = c("Grass" = "solid", "Field Turf" = "dashed")) +
+  theme_niall() +
+  labs(x = "Matches", y = "Percentage (%)", title = "Kaplan–Meier Estimator Based On Surface Type",
+       subtitle = "Compared Player Injury Rates with players who played more than\n50% of Games on one surface.\nP-Value = 0.4793")
+
+#chisq.test()
+
+chisq.test(datadata$Percent, datadata$Surface)
+
+
+library(plotly)
+fig <- plot_ly(x = ~grass.Kaplan$Game_Number, y = ~grass.Kaplan$Percent, type = 'scatter', mode = 'lines', name = 'Fair cut', fill = 'tozeroy')
+fig <- fig %>% add_trace(x = ~turf.Kaplan$Game_Number, y = ~turf.Kaplan$Percent, name = 'Ideal cut', fill = 'tozeroy')
+fig <- fig %>% layout(xaxis = list(title = 'Carat'),
+                      yaxis = list(title = 'Density'))
+
+fig  
+
+
