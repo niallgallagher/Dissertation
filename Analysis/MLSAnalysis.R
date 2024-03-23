@@ -7,7 +7,7 @@ library(tidyverse)
 library(lubridate)
 library(scales)
 library(ggridges)
-
+library(ggplot2)
 mls.fixtures <- read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFixtures.xlsx')
 mls.injury.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/GameInjuries.xlsx')
 mls.player.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFull.xlsx')
@@ -351,7 +351,6 @@ gridExtra::grid.arrange(p1, p2)
 
 
 
-
 games %>% 
   group_by(Surface) %>% 
   mutate(perc_injured = Injury_Count / Games) %>% 
@@ -426,16 +425,16 @@ gridExtra::grid.arrange(pos1, pos2)
 
 ###Weather 
 
-mls.injury.fixtures %>% 
-  filter(Roof %in% c("Open")) %>% 
-  distinct(MatchID) %>% 
-  ggplot(aes(x= `temperature_2m (°C)`)) +
-  geom_boxplot(alpha = 0.5) +
-  scale_fill_manual(values = plot_cols, guide = "none") +
-  scale_colour_manual(values = plot_cols, guide = "none") +
-  ggtitle("INJURIES OCCUR EARLIER ON NATURAL SURFACES", subtitle = "28 records not included as exact play\nwhere injury occurred is unknown") +
-  labs(x= "Field Type", y= "Game Play") +
-  theme_niall()
+# mls.injury.fixtures %>% 
+#   filter(Roof %in% c("Open")) %>% 
+#   distinct(MatchID) %>% 
+#   ggplot(aes(x= `temperature_2m (°C)`)) +
+#   geom_boxplot(alpha = 0.5) +
+#   scale_fill_manual(values = plot_cols, guide = "none") +
+#   scale_colour_manual(values = plot_cols, guide = "none") +
+#   ggtitle("INJURIES OCCUR EARLIER ON NATURAL SURFACES", subtitle = "28 records not included as exact play\nwhere injury occurred is unknown") +
+#   labs(x= "Field Type", y= "Game Play") +
+#   theme_niall()
 
 
 
@@ -451,16 +450,16 @@ temp1 <- mls.injury.fixtures %>%
   theme(axis.text.y = element_blank()) 
 
 
-temp2 <- df3 %>%
-  filter(Roof %in% c("Open")) %>% 
-  distinct(MatchID) %>% 
-  inner_join(df3, by = "MatchID") %>%
-  ggplot(aes(x = `temperature_2m (°C)`)) +
-  geom_boxplot(alpha = 0.5, fill = "lightgreen", color = "green") +
-  ggtitle("Tempeartures With No Injury") +
-  labs(x = "Temperature (°C)") +
-  theme_bw() +
-  theme(axis.text.y = element_blank()) 
+# temp2 <- df3 %>%
+#   filter(Roof %in% c("Open")) %>% 
+#   distinct(MatchID) %>% 
+#   inner_join(df3, by = "MatchID") %>%
+#   ggplot(aes(x = `temperature_2m (°C)`)) +
+#   geom_boxplot(alpha = 0.5, fill = "lightgreen", color = "green") +
+#   ggtitle("Tempeartures With No Injury") +
+#   labs(x = "Temperature (°C)") +
+#   theme_bw() +
+#   theme(axis.text.y = element_blank()) 
 
 gridExtra::grid.arrange(temp1, temp2)
 
@@ -1057,4 +1056,143 @@ ggplot() +
 
 
 
-#######Correlation Matrix#######
+#######DayVSNight#######
+
+mls.fixtures %>% 
+    group_by(Surface) %>% 
+    count(`is_day ()`) 
+
+games.day.night <-  data.frame(
+  "Games" = c(448, 678, 1652,1581,137,233),
+  "Surface" = c("Field Turf","Field Turf", "Grass","Grass", "Hybrid","Hybrid"),
+  "Injury_Count" = c(68,159,284,346,27,55),
+  "Time" = c("Night","Day", "Night","Day", "Night","Day")
+)
+#games.day.night$Total <- ave(games.day.night$Injury_Count, games.day.night$Surface, FUN = sum)
+games.day.night$Percentage <- ((games.day.night$Injury_Count / games.day.night$Games)*100)
+
+
+# Create a stacked bar chart
+
+
+# Create a grouped bar chart
+# Define custom colors based on surface type and day/night time
+my_colors <- c("Field Turf_Day" = "#e41a1c", 
+               "Field Turf_Night" = "#ff9999", 
+               "Grass_Day" = "#4daf4a", 
+               "Grass_Night" = "#98df8a", 
+               "Hybrid_Day" = "#0066ff", 
+               "Hybrid_Night" = "#99c2ff")
+
+# Create the grouped bar chart with percentage on the y-axis and custom colors
+ggplot(games.day.night, aes(x = Surface, y = Percentage, fill = paste(Surface, Time, sep = "_"))) +
+  geom_bar(stat = "identity", position = "dodge") +
+  labs(title = "Injury Percentages by Surface Type and Time",
+       x = "Surface Type",
+       y = "Percentage (%)",
+       fill = "Surface & Time") +
+  scale_fill_manual(values = my_colors) +  # Use custom colors
+  theme_niall() +
+  theme(legend.position = "bottom")  # Adjust legend position if necessary
+
+
+#tests 
+grass.chi <- mls.weatherdataset %>%
+  filter(Surface == "Grass")
+
+field.turf.chi <- mls.weatherdataset %>%
+  filter(Surface == "Field Turf")
+
+hybrid.chi <- mls.weatherdataset %>%
+  filter(Surface == "Hybrid")
+
+chisq.test(grass.chi$MatchInjury, grass.chi$`is_day ()`, correct=FALSE)
+
+chisq.test(field.turf.chi$MatchInjury, field.turf.chi$`is_day ()`, correct=FALSE)
+
+chisq.test(hybrid.chi$MatchInjury, hybrid.chi$`is_day ()`, correct=FALSE)
+
+names(mls.weatherdataset)[names(mls.weatherdataset) == "temperature_2m (°C)"] <- "temperature_2m_C"
+
+# List of columns (variables) for which you want to perform t-tests
+columns_of_interest <- c("temperature_2m_C", "relative_humidity_2m (%)", "dew_point_2m (°C)", "apparent_temperature (°C)","precipitation (mm)","rain (mm)","soil_moisture_0_to_7cm (m³/m³)","soil_temperature_0_to_7cm (°C)","wind_speed_10m (km/h)","cloud_cover (%)" )
+
+
+result1.01 <- t.test(`temperature_2m_C` ~ MatchInjury, data = mls.weatherdataset)
+result1.02 <- t.test(`relative_humidity_2m (%)` ~ MatchInjury, data = mls.weatherdataset)
+result1.03 <- t.test(`dew_point_2m (°C)` ~ MatchInjury, data = mls.weatherdataset)
+result1.04 <- t.test(`apparent_temperature (°C)` ~ MatchInjury, data = mls.weatherdataset)
+result1.05 <- t.test(`precipitation (mm)` ~ MatchInjury, data = mls.weatherdataset)
+result1.06 <- t.test(`soil_moisture_0_to_7cm (m³/m³)` ~ MatchInjury, data = mls.weatherdataset)
+result1.07 <- t.test(`wind_speed_10m (km/h)` ~ MatchInjury, data = mls.weatherdataset)
+result1.08 <- t.test(`cloud_cover (%)` ~ MatchInjury, data = mls.weatherdataset)
+
+#Correlation Matrix 
+
+corr.data <- mls.weatherdataset %>% select(10:14,15)
+
+
+library(corrplot)
+
+corr.data <- corr.data %>%
+  mutate(MatchInjury = case_when(
+    MatchInjury == "Yes" ~ 1,
+    TRUE ~ 0
+  ))
+
+
+
+correlation_matrix <- cor(corr.data)
+
+corrplot(correlation_matrix, method = "number")
+
+
+
+
+###################
+corr.data <- mls.player.fixtures
+
+corr.data$MatchInjury <- ifelse(is.na(corr.data$injury), 0, 1)
+
+corr.data <- corr.data %>% select(6,7,9,10,12,25,56)
+
+corr.data <- na.omit(corr.data)
+
+encoded <- model.matrix(~ Surface - 1, data = corr.data)
+
+# Convert the encoded matrix to a dataframe
+encoded_df <- as.data.frame(encoded)
+
+# Print the encoded dataframe
+encoded2 <- model.matrix(~ Position_Group - 1, data = corr.data)
+
+# Convert the encoded matrix to a dataframe
+encoded_df2 <- as.data.frame(encoded2)
+
+test <- cbind(corr.data,encoded_df,encoded_df2)
+
+corr.data <- test %>% select(1:4,7:17)
+
+corr.data1 <- corr.data %>% select(1:8)
+
+correlation_matrix <- cor(corr.data1)
+
+corrplot(correlation_matrix, method = "number")
+
+corr.data2 <- corr.data %>% select(5,9:15)
+
+correlation_matrix <- cor(corr.data2)
+
+corrplot(correlation_matrix, method = "number")
+
+######################################################
+mls.injury.fixtures %>%
+  group_by(Surface)  %>%
+  count(Position_Group)
+
+
+t.tt <- mls.player.fixtures %>%
+  group_by(Surface)  %>%
+  count(Position_Group)
+
+clipr::write_clip(t.tt)
