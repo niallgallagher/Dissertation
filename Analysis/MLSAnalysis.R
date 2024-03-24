@@ -8,6 +8,7 @@ library(lubridate)
 library(scales)
 library(ggridges)
 library(ggplot2)
+library(dplyr)
 mls.fixtures <- read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFixtures.xlsx')
 mls.injury.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/GameInjuries.xlsx')
 mls.player.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFull.xlsx')
@@ -1196,3 +1197,275 @@ t.tt <- mls.player.fixtures %>%
   count(Position_Group)
 
 clipr::write_clip(t.tt)
+
+
+
+inj.type <- mls.injury.fixtures %>% count(injury)
+
+
+mls.injury.fixtures <- mls.injury.fixtures %>%  
+  mutate(Injury_Type = case_when( injury %in% c("Achilles tendon problems", "Achilles tendon rupture", "Adductor injury", "Adductor pain", "Cruciate ligament injury",
+                                             "Cruciate ligament strain", "Cruciate ligament tear","Inner ligament injury","Inner ligament stretch of the knee",
+                                             "Internal ligament strain",
+                                             "Internal ligament tear",
+                                             "Left hip flexor problems",
+                                             "Ligament stretching",
+                                             "Meniscus damage",
+                                             "Meniscus injury",
+                                             "Meniscus tear",
+                                             "Muscle fiber tear",
+                                             "Torn knee ligaments",
+                                             "Torn lateral knee ligament",
+                                             "Ankle surgery",
+                                             "Knee surgery",
+                                             "Groin surgery") ~ "Joint, Tendon, and Ligament Injuries",
+                               injury %in% c("Ankle injury",
+                                             "Broken fibula",
+                                             "Broken foot",
+                                             "Broken leg",
+                                             "Broken tibia",
+                                             "Broken toe",
+                                             "Foot bruise",
+                                             "Foot injury",
+                                             "Foot surgery",
+                                             "Hairline crack in foot",
+                                             "Hairline crack in the lumbar region",
+                                             "Heel injury",
+                                             "Heel problems",
+                                             "Hip injury",
+                                             "Hip problems",
+                                             "Knee bruise",
+                                             "Knee injury",
+                                             "Knee problems",
+                                             "Leg injury",
+                                             "Metatarsal bruise",
+                                             "Shin bruise",
+                                             "Shin injury",
+                                             "Thigh problems",
+                                             "Toe injury",
+                                             "ankle sprain"
+                               ) ~ "Lower Limb Injuries",
+                               injury %in% c("Calf injury",
+                                             "Calf problems",
+                                             "Calf strain",
+                                             "Groin injury",
+                                             "Groin problems",
+                                             "Groin strain",
+                                             "Hamstring injury",
+                                             "Hamstring strain",
+                                             "Injury to abdominal muscles",
+                                             "Muscle injury",
+                                             "Muscle strain",
+                                             "Muscle tear",
+                                             "Strain in the thigh and gluteal muscles",
+                                             "Torn muscle fiber",
+                                             "Torn thigh muscle",
+                                             "muscular problems"
+                               ) ~ "Muscle Injuries",
+                               injury %in% c("Fitness",
+                                             "Rest",
+                                             "bruise",
+                                             "fracture",
+                                             "sprain",
+                                             "strain",
+                                             "unknown injury"
+                               ) ~ "Recovery and Rest/Other",
+                               injury %in% c("Back injury",
+                                             "Back problems",
+                                             "Broken arm",
+                                             "Broken collarbone",
+                                             "Broken jaw",
+                                             "Broken nose bone",
+                                             "Bruised ribs",
+                                             "Chest injury",
+                                             "Elbow injury",
+                                             "Eye injury",
+                                             "Eyebow fracture",
+                                             "Facial fracture",
+                                             "Facial injury",
+                                             "Finger injury",
+                                             "Head injury",
+                                             "Herniated disc",
+                                             "Knock",
+                                             "Lumbar vertebra fracture",
+                                             "Lung contusion",
+                                             "Neck injury",
+                                             "Pelvic injury",
+                                             "Pneumothorax",
+                                             "Pubalgia",
+                                             "Rib fracture",
+                                             "Shoulder injury",
+                                             "Wrist fracture",
+                                             "Wrist injury",
+                                             "concussion",
+                                             "horse kiss"
+                               ) ~ "Upper Body Injuries/Concussions/Spine",
+                               
+                               TRUE ~ "Other"
+  ))
+
+
+# Data
+data.inj.type <- data.frame(
+  Surface = c("Field Turf", "Field Turf", "Field Turf", "Field Turf", "Field Turf",
+              "Grass", "Grass", "Grass", "Grass", "Grass",
+              "Hybrid", "Hybrid", "Hybrid", "Hybrid", "Hybrid"),
+  Injury_Type = c("Joint, Tendon, and Ligament Injuries", "Lower Limb Injuries", "Muscle Injuries",
+                  "Recovery and Rest/Other", "Upper Body Injuries/Concussions/Spine",
+                  "Joint, Tendon, and Ligament Injuries", "Lower Limb Injuries", "Muscle Injuries",
+                  "Recovery and Rest/Other", "Upper Body Injuries/Concussions/Spine",
+                  "Joint, Tendon, and Ligament Injuries", "Lower Limb Injuries", "Muscle Injuries",
+                  "Recovery and Rest/Other", "Upper Body Injuries/Concussions/Spine"),
+  n = c(29, 56, 108, 10, 24, 78, 190, 253, 28, 81, 9, 35, 24, 5, 9)
+)
+
+# Plot
+# Calculate percentages by Surface
+data.inj.type <- transform(data.inj.type,
+                  Percent = n / ave(n, Surface, FUN = sum) * 100)
+
+# Define custom colors
+my_colors <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd")
+
+# Plot
+ggplot(data.inj.type, aes(x = Surface, y = Percent, fill = Injury_Type)) +
+  geom_bar(stat = "identity") +
+  geom_text(aes(label = sprintf("%.1f%%", Percent)), 
+            position = position_stack(vjust = 0.5), 
+            size = 5, 
+            color = "white") +
+  labs(title = "Distribution of Injury Types Across Surfaces",
+       x = "Surface",
+       y = "Percentage of Injuries",
+       fill = "Injury Type") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        axis.text.y = element_text(angle = 0, hjust = 1)) +  # Change orientation of y-axis label
+  scale_fill_manual(name = "Injury Type", values = my_colors) + # Set custom colors
+  theme_niall() +
+  theme(legend.position = "right") +
+  theme(plot.title = element_text(hjust = 0.5)) +
+  coord_flip()
+
+
+mls.injury.fixtures %>%
+       group_by(Surface) %>%
+       count(Injury_Type)
+
+
+
+
+#Injury Type and Surface
+df1.joint <- data.frame(
+  JointInjury = c(rep("Injured", 29), rep("Not-Injured", 13651)),
+  Surface = c(rep("Field Turf", 13680))
+)
+
+df2.joint <- data.frame(
+  JointInjury = c(rep("Injured", 78), rep("Not-Injured", 40849)),
+  Surface = c(rep("Grass", 40927))
+)
+
+chi.test.joint <- rbind(df1.joint,df2.joint)
+chisq.test(chi.test.joint$Surface, chi.test.joint$JointInjury, correct=FALSE)
+
+
+df1.lowerlimb <- data.frame(
+  LowerLimbInjury = c(rep("Injured", 56), rep("Not-Injured", 13624)),
+  Surface = c(rep("Field Turf", 13680))
+)
+
+df2.lowerlimb <- data.frame(
+  LowerLimbInjury = c(rep("Injured", 190), rep("Not-Injured", 40737)),
+  Surface = c(rep("Grass", 40927))
+)
+
+chi.test.lowerlimb <- rbind(df1.lowerlimb,df2.lowerlimb)
+chisq.test(chi.test.lowerlimb$Surface, chi.test.lowerlimb$LowerLimbInjury, correct=FALSE)
+
+
+df1.muscle <- data.frame(
+  MuscleInjury = c(rep("Injured", 108), rep("Not-Injured", 13572)),
+  Surface = c(rep("Field Turf", 13680))
+)
+
+df2.muscle <- data.frame(
+  MuscleInjury = c(rep("Injured", 253), rep("Not-Injured", 40674)),
+  Surface = c(rep("Grass", 40927))
+)
+
+chi.test.muscle <- rbind(df1.muscle,df2.muscle)
+chisq.test(chi.test.muscle$Surface, chi.test.muscle$MuscleInjury, correct=FALSE)
+
+
+
+df1.up <- data.frame(
+  UpInjury = c(rep("Injured", 24), rep("Not-Injured", 13656)),
+  Surface = c(rep("Field Turf", 13680))
+)
+
+df2.up <- data.frame(
+  UpInjury = c(rep("Injured", 81), rep("Not-Injured", 40846)),
+  Surface = c(rep("Grass", 40927))
+)
+
+chi.test.up <- rbind(df1.up,df2.up)
+chisq.test(chi.test.up$Surface, chi.test.up$UpInjury, correct=FALSE)
+
+
+
+###Hybrid VS Others###
+df1.joint <- data.frame(
+  JointInjury = c(rep("Injured", 9), rep("Not-Injured", 4247)),
+  Surface = c(rep("Hybrid", 4256))
+)
+
+df2.joint <- data.frame(
+  JointInjury = c(rep("Injured", 107), rep("Not-Injured", 54500)),
+  Surface = c(rep("Other", 54607))
+)
+
+chi.test.joint <- rbind(df1.joint,df2.joint)
+chisq.test(chi.test.joint$Surface, chi.test.joint$JointInjury, correct=FALSE)
+
+
+df1.lowerlimb <- data.frame(
+  LowerLimbInjury = c(rep("Injured", 35), rep("Not-Injured", 4221)),
+  Surface = c(rep("Hybrid", 4256))
+)
+
+df2.lowerlimb <- data.frame(
+  LowerLimbInjury = c(rep("Injured", 246), rep("Not-Injured", 54361)),
+  Surface = c(rep("Other", 54607))
+)
+
+chi.test.lowerlimb <- rbind(df1.lowerlimb,df2.lowerlimb)
+chisq.test(chi.test.lowerlimb$Surface, chi.test.lowerlimb$LowerLimbInjury, correct=FALSE)
+
+
+df1.muscle <- data.frame(
+  MuscleInjury = c(rep("Injured", 24), rep("Not-Injured", 4232)),
+  Surface = c(rep("Hybrid", 4256))
+)
+
+df2.muscle <- data.frame(
+  MuscleInjury = c(rep("Injured", 361), rep("Not-Injured", 54246)),
+  Surface = c(rep("Other", 54607))
+)
+
+chi.test.muscle <- rbind(df1.muscle,df2.muscle)
+chisq.test(chi.test.muscle$Surface, chi.test.muscle$MuscleInjury, correct=FALSE)
+
+
+
+df1.up <- data.frame(
+  UpInjury = c(rep("Injured", 9), rep("Not-Injured", 4247)),
+  Surface = c(rep("Hybrid", 4256))
+)
+
+df2.up <- data.frame(
+  UpInjury = c(rep("Injured", 95), rep("Not-Injured", 54512)),
+  Surface = c(rep("Other", 54607))
+)
+
+chi.test.up <- rbind(df1.up,df2.up)
+chisq.test(chi.test.up$Surface, chi.test.up$UpInjury, correct=FALSE)
