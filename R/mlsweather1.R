@@ -5,7 +5,7 @@ library(tidyverse)
 library(plyr)
 
 #Load in dataset
-mls.fixtures = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Match_Updated.xlsx',guess_max = 100000)
+mls.fixtures = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/Match_Updated.xlsx',guess_max = 100000)
 
 #Filter Fixtures after 2012
 #mls.fixtures.new <- filter(mls.fixtures, year >= 2012)
@@ -16,7 +16,7 @@ mls.fixtures$time <- substr(mls.fixtures$Time, 12, 16)
 
 mls.fixtures$Date <- as.character(mls.fixtures$Date)
 
-mls.stadiums = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/stadiums.xlsx')
+mls.stadiums = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/stadiums.xlsx')
 
 mls.fixtures$Venue[mls.fixtures$Venue == 'Stevens Stadium'] <- 'Buck Shaw Stadium'
 

@@ -3,6 +3,7 @@ library(dplyr)
 library(tidyverse)
 library(worldfootballR)
 library(eatTools)
+library(readxl)
 
 big5_player_possession <- fb_big5_advanced_season_stats(season_end_year= 2021, stat_type= "possession", team_or_player= "player")
 dplyr::glimpse(big5_player_possession)
@@ -1235,4 +1236,62 @@ sum(duplicated(playerkey$PlayerFBref))
 duplicates <- playerkey[duplicated(playerkey$URL), ]
 
 duplicates2 <- playerkey[duplicated(playerkey$PlayerFBref), ]
+
+
+#Creating Pitches Type map games Map
+fixtures.games = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/MLSFixtures.xlsx')
+
+pitchsurface <- table(fixtures.games['Surface'])
+
+
+pitchsurface <- fixtures.games %>%
+  group_by(Surface) %>%
+  summarise(n = n()) %>%
+  mutate(Freq = (n/sum(n)* 100))
+
+
+
+
+
+
+library(ggthemes)
+
+ggplot(Ancestry, aes(x = Year, y = Proportion, fill = Surface)) +
+  geom_col() +
+  geom_text(aes(label = paste0(Proportion, "%")),
+            colour = "white",
+            position = position_stack(vjust = 0.5)) +
+  theme_economist(base_size = 14) +
+  scale_fill_economist() +
+  theme(legend.position = "right", 
+        legend.title = element_text("Surface")) +
+  theme(axis.title.y = element_text(margin = margin(r = 20))) +
+  ylab("Percentage") +
+  xlab(NULL) +
+  labs(title = "Surface Type of MLS Picthes", subtitle = "\n Seasons From 2012 to 2023 ") +
+  scale_fill_manual(values = c("darkgreen", "#454B1B", "#228B22"))
+
+
+Ancestry <- data.frame(Surface = c("Field Turf", "Grass", "Hybrid"), 
+                       Proportion = c(23.8, 68.4, 7.8))
+
+Ancestry <- Ancestry %>% 
+  mutate(Year = "Surface Type")
+
+ggplot(Ancestry, aes(x = Year, y = Proportion, fill = Race)) +
+  geom_col() +
+  geom_text(aes(label = paste0(Proportion, "%")),
+            position = position_stack(vjust = 0.5)) +
+  scale_fill_brewer(palette = "Set2") +
+  theme_minimal(base_size = 16) +
+  ylab("Percentage") +
+  xlab(NULL)
+
+
+
+
+
+
+
+
 
