@@ -1,7 +1,7 @@
-####Analysis and Machine Learning MLS####
+####Analysis MLS####
 ####Niall Gallagher#######
 
-#Libaries 
+#Libraries 
 library(readxl)
 library(tidyverse)
 library(lubridate)
@@ -9,6 +9,11 @@ library(scales)
 library(ggridges)
 library(ggplot2)
 library(dplyr)
+library(corrplot)
+library(survival)
+library(survminer)
+library(data.table)
+
 mls.fixtures <- read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFixtures.xlsx')
 mls.injury.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/GameInjuries.xlsx')
 mls.player.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFull.xlsx')
@@ -102,10 +107,15 @@ df3 <- data.frame(
   Injury = c(rep("Injured", 82), rep("Not-Injured", 4174)),
   Surface = c(rep("Hybrid", 4256))
 )
-table(chi.test)
 chi.test <- rbind(df1,df2)
 chisq.test(chi.test$Surface, chi.test$Injury, correct=FALSE)
+table(chi.test)
 
+chi.test2 <- rbind(df1,df3)
+chisq.test(chi.test2$Surface, chi.test2$Injury, correct=FALSE)
+
+chi.test3 <- rbind(df2,df3)
+chisq.test(chi.test3$Surface, chi.test3$Injury, correct=FALSE)
 
 
 
@@ -862,7 +872,7 @@ unique_values  <- unique(filtered_data$URL)
 unique_values2 <- unique(filtered_data2$URL)
 unique_values3 <- unique(filtered_data3$URL)
 
-
+#######**Grass**####################
 grass.matches <- mls.player.fixtures %>%
   filter(URL %in% unique_values3)
 
@@ -875,8 +885,8 @@ grass.matches <- grass.matches %>%
   group_by(Date, MatchID) %>%
   mutate(Game_Number = cur_group_id())
 
-grass.matches <- mls.player.fixtures %>%
-  filter(URL %in% unique_values)
+# grass.matches <- mls.player.fixtures %>%
+#   filter(URL %in% unique_values)
 
 grass.matches$game_injury <- ifelse(is.na(grass.matches$injury), 0, 1)
 
@@ -928,17 +938,147 @@ print(highest_game_numbers)
 df <- highest_game_numbers[order(highest_game_numbers$Game_Number, highest_game_numbers$Percent), ]
 
 # Keep the first occurrence of each Game_Number
-df <- df[!duplicated(df$Game_Number), ]
+df.grass <- df[!duplicated(df$Game_Number), ]
 
-print(df)
+print(df.grass)
+
+# Print the updated dataframe
+head(highest_game_numbers)
+################################################################################################################
+turf.matches <- mls.player.fixtures %>%
+  filter(URL %in% unique_values)
+
+turf.matches$game_injury <- ifelse(is.na(turf.matches$injury), 0, 1)
+
+turf.matches$Date <- as.Date(turf.matches$Date)
+
+turf.matches <- turf.matches %>%
+  arrange(Date) %>%
+  group_by(Date, MatchID) %>%
+  mutate(Game_Number = cur_group_id())
+
+turf.matches <- mls.player.fixtures %>%
+  filter(URL %in% unique_values)
+
+turf.matches$game_injury <- ifelse(is.na(turf.matches$injury), 0, 1)
+
+turf.matches$Date <- as.Date(turf.matches$Date)
+
+turf.matches <- turf.matches %>%
+  arrange(Date) %>%
+  group_by(Date, MatchID) %>%
+  mutate(Game_Number = cur_group_id())
+
+
+#hybrid.matches <- mls.player.fixtures %>%
+#  filter(URL %in% unique_values2)
+
+turf.matches$Percent <- 100
+
+# Function to update Percent based on Injury
+update_percent <- function(turf.matches) {
+  # Initialize percent_remaining as 100
+  percent_remaining <- 100
+  
+  # Loop through each row
+  for (i in 1:nrow(turf.matches)) {
+    # If Injury is 1, decrease percent_remaining by 20 (assuming 20% decrement)
+    if (turf.matches$game_injury[i] == 1) {
+      percent_remaining <- percent_remaining - ((1/n_distinct(turf.matches$URL))*100)
+    }
+    # Update Percent column with percent_remaining value
+    turf.matches$Percent[i] <- percent_remaining
+  }
+  
+  return(turf.matches)
+}
+
+# Update Percent column based on Injury
+turf.matches <- update_percent(turf.matches)
+
+
+
+highest_game_number_per_percentage <- function(turf.matches) {
+  result <- aggregate(Game_Number ~ Percent, turf.matches, max)
+  return(result)
+}
+
+highest_game_numbers <- highest_game_number_per_percentage(turf.matches)
+print(highest_game_numbers)
+
+# Sort the data by Game_Number in ascending order and then by Percent in ascending order
+df <- highest_game_numbers[order(highest_game_numbers$Game_Number, highest_game_numbers$Percent), ]
+
+# Keep the first occurrence of each Game_Number
+df.turf <- df[!duplicated(df$Game_Number), ]
+
+print(df.turf)
 
 # Print the updated dataframe
 head(highest_game_numbers)
 
-#grass.Kaplan <- df
 
-#turf.Kaplan <- df
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+grass.Kaplan <- df.grass
+
+turf.Kaplan <- df.turf
+
+#*
 grass.Kaplan <- grass.Kaplan %>% filter(Game_Number < 3000)
 
 string_to_replicate <- "Grass"
@@ -949,7 +1089,7 @@ grass.Kaplan$Surface <- rep(string_to_replicate, nrow(grass.Kaplan))
 
 string_to_replicate <- "Field Turf"
 turf.Kaplan$Surface <- rep(string_to_replicate, nrow(turf.Kaplan))
-
+#*
 new_row <- data.frame(
   Percent = 51.59420, 
   Game_Number = 3000,
@@ -964,6 +1104,52 @@ turf.Kaplan <- rbind(turf.Kaplan, new_row)
 
 # Assuming you have grass.Kaplan and turf.Kaplan data frames
 datadata = rbind(grass.Kaplan, turf.Kaplan)
+
+datadata$Injury <- 1
+
+
+datadata <- datadata[,-1]
+
+game_numbers_grass <- 1:4730
+game_numbers_hybrid <- 1:2826
+
+# Create a data frame with all combinations of game numbers and surfaces
+all_combinations <- data.frame(
+  Game_Number = c(rep(game_numbers_grass, each = length(unique(datadata$Surface))),
+                 rep(game_numbers_hybrid, each = length(unique(datadata$Surface)))),
+  Surface = c(rep("Grass", length(game_numbers_grass) * length(unique(datadata$Surface))),
+              rep("Field Turf", length(game_numbers_hybrid) * length(unique(datadata$Surface))))
+)
+
+# Merge with existing data and fill missing values with 0
+complete_data <- merge(all_combinations, datadata, by = c("Game_Number", "Surface"), all.x = TRUE) %>%
+  mutate(Injury = ifelse(is.na(Injury), 0, 1))
+
+# Reorder columns if needed
+complete_data <- complete_data[, c("Game_Number", "Surface", "Injury")]
+
+# Print the complete data frame
+print(complete_data)
+
+complete_data <- unique(complete_data)
+
+
+complete_data2 <- subset(complete_data, Game_Number < 2827)
+
+
+km_fit <- survfit(Surv(Game_Number, Injury) ~ Surface, data = complete_data2)
+
+# Plot Kaplan-Meier curves
+ggsurvplot(km_fit, data = complete_data, risk.table = TRUE,
+           pval = TRUE, conf.int = TRUE,
+           ggtheme = theme_niall(),
+           palette = c( "#e41a1c","#4daf4a"), # Custom colors for curves
+           linetype = c("solid", "dashed"))   # Custom line types for curves
+
+
+
+
+
 
 #chisq.test()
 
@@ -991,8 +1177,6 @@ result <- t.test(Percent ~ Surface, data = t.test.data, paired = TRUE)
 
 datatdata
 
-library(survival)
-library(survminer)
 
 data.grass.test <- grass.Kaplan
 data.ft.test <- turf.Kaplan
@@ -1121,7 +1305,7 @@ columns_of_interest <- c("temperature_2m_C", "relative_humidity_2m (%)", "dew_po
 
 result1.01 <- t.test(`temperature_2m_C` ~ MatchInjury, data = mls.weatherdataset)
 result1.02 <- t.test(`relative_humidity_2m (%)` ~ MatchInjury, data = mls.weatherdataset)
-result1.03 <- t.test(`dew_point_2m (°C)` ~ MatchInjury, data = mls.weatherdataset)
+result1.03 <- t.test(`soil_temperature_0_to_7cm (°C)` ~ MatchInjury, data = mls.weatherdataset)
 result1.04 <- t.test(`apparent_temperature (°C)` ~ MatchInjury, data = mls.weatherdataset)
 result1.05 <- t.test(`precipitation (mm)` ~ MatchInjury, data = mls.weatherdataset)
 result1.06 <- t.test(`soil_moisture_0_to_7cm (m³/m³)` ~ MatchInjury, data = mls.weatherdataset)
@@ -1133,7 +1317,6 @@ result1.08 <- t.test(`cloud_cover (%)` ~ MatchInjury, data = mls.weatherdataset)
 corr.data <- mls.weatherdataset %>% select(10:14,15)
 
 
-library(corrplot)
 
 corr.data <- corr.data %>%
   mutate(MatchInjury = case_when(
