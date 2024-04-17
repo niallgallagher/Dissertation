@@ -1,10 +1,13 @@
-#This R Script will condense player columns by Merging Players Names
+####Player Data Cleansing MLS####
+####Niall Gallagher#######
 
-#Date 24/11/2023
 library(dplyr)
 library(tidyverse)
 library(worldfootballR)
 library(readxl)
+
+#This R Script will condense player columns by Merging Players Names
+
 #Load 2012 MLS Players
 mls.players2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/Bio/league2012PlayerBio.xlsx')
 
@@ -21,6 +24,7 @@ mls.players2013 <- select(mls.players2013, -contract_there_expires)
 
 mls.players2013 <- select(mls.players2013, -on_loan_from)
 
+#Merge 2012 Player with 2013
 merge2012.2013 <- rbind(mls.players2012, mls.players2013)
 
 #Removing Duplicate Player Id's
@@ -195,18 +199,20 @@ mls.players2012_23 <- merge2012.2023[!duplicated(merge2012.2023$PlayerId), ]
 
 mls.key.player <- mls.players2012_23[,c(1,3,20,27)]
 
+
+###**Mapping Players of FBEF and Transfermarkt Data With Function "player_dictionary_mapping()"
 mapped_players <- player_dictionary_mapping()
 
-
+#Join Data Frames Based On Player URL
 trialKey <- mls.key.player %>% left_join(mapped_players, 
                                          by=c('URL'='UrlTmarkt'))
 
 sum(is.na(trialKey$PlayerFBref))
 clipr::write_clip(trialKey)
 
-
 clipr::write_clip(mls.players2012_23)
 
+#Part 2
 #Performing data cleanse of the dataset.
 mls.players2012_2023 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Player2012_2023.xlsx')
 
@@ -215,12 +221,10 @@ library(stringr)
 
 mls.test <- mls.players2012_2023 %>% select(27,1,3,5,6,8,21,20)
 
-
 #Create a position group. 
 sort(unique(mls.test$position))
 
-#Create a Case When
-
+#Create a Case When for Positions
 mls.test <- mls.test %>%
   mutate(Position_Group = case_when(position == "Attack" ~ 'Striker', 
                                     position == "Attack - Centre-Forward" ~ 'Striker',
@@ -257,16 +261,17 @@ mls.test <- mls.test %>%
                                     position == "midfield - Right Midfield" ~ 'Right Midfielder',
                                     position == "midfield - Left Midfield" ~ 'Left Midfielder'))
 
-# To DO. Reassign players with distribution of feet  
+# To DO. Reassign players with distribution of feet preference 
 mls.test <- mls.test %>% select(1,2,3,4,5,6,7,10,9,8)
 
 sum(!complete.cases(mls.test$foot))
 
 count(mls.test, foot)
 
-
+#MLS Player Weights were brought In
 mls.playersweights = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerWeightsUpdated.xlsx')
 
+#I merged This with original dataset
 mls.players <- mls.playersweights %>% left_join(mls.test, by=c('PlayerId' = 'PlayerId',
                                                                'URL' = 'URL',
                                                                'PlayerTm' = 'player_name'))
@@ -276,8 +281,6 @@ count(mls.players, foot)
 sum(!complete.cases(mls.players$height))
 
 mls.players
-# Creating a sample data frame
-#df <- data.frame(column_name = c('A', 'B', 'A', 'B', 'A', 'C', NA, 'B', 'C', NA))
 
 # Calculate the distribution of strings in the column
 string_distribution <- table(mls.players$foot) / length(mls.players$foot)
@@ -297,24 +300,5 @@ mls.players$foot <- sapply(mls.players$foot, fill_na_random)
 #Removing Unnecessary columns r
 mls.players <- mls.players %>% select(2,3,4,9,6,10,13,14,1)
 
-
+#Copy and Past data frame to Excel
 clipr::write_clip(mls.players)
-
-#Chart of Player Positions in the dataset.
-test <- count(mls.players, Position_Group)
-
-
-
-test %>% 
-     ggplot(aes(x = Position_Group, y = n)) +
-     geom_col(mapping = aes(x=Position_Group, y=n), fill = c("black","purple","bisque3","red","pink","green","lightblue")) +
-     scale_y_continuous(breaks = seq(0, 650, by=50)) +
-     labs(x = "Player Positions", y = "Number of Players", title = "Bar Chart of Player Positions", subtitle = "MLS Players") +
-     geom_text(aes(label= n), vjust=1.2, size=3, col = "white") +
-     theme_bw()  +
-     guides(x = guide_axis(angle = 90))
-
-
-
-#Creating Pitches games Map
-
