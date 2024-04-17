@@ -1,5 +1,6 @@
 ####Analysis MLS####
-####Niall Gallagher#######
+####Niall Gallagher####
+####Sheet *7*########
 
 #Libraries 
 library(readxl)
@@ -12,17 +13,19 @@ library(dplyr)
 library(corrplot)
 library(survival)
 library(survminer)
-library(data.table)
+#library(data.table)
 
+#Load Excel Files
 mls.fixtures <- read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFixtures.xlsx')
 mls.injury.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/GameInjuries.xlsx')
 mls.player.fixtures <-read_excel('C:/Users/niall/OneDrive/Documents/Dissertation/Analysis/MLSFull.xlsx')
 
+#Removing ".x" in column names of Injuries and Fixture Data
 names(mls.injury.fixtures) <- gsub("\\.x", "", names(mls.injury.fixtures))
 
 names(mls.player.fixtures) <- gsub("\\.x", "", names(mls.player.fixtures))
 
-
+#Removing Illnesses from Injuries
 mls.injury.fixtures <- mls.injury.fixtures[mls.injury.fixtures$injury != "Ill" & mls.injury.fixtures$injury != "Corona virus", ]
 
 
@@ -69,17 +72,15 @@ theme_niall <- function(legend_pos="top", base_size=12, font=NA){
 plot_cols <- c("#498972", "#3E8193", "#BC6E2E", "#A09D3C", "#E06E77", "#7589BC", "#A57BAF", "#4D4D4D")
 
 
-Test <- dplyr::count(mls.injury.fixtures, injury)            # Applying count function
-Test2 <- dplyr::count(mls.injury.fixtures, Games)
-
-stad <- dplyr::count(mls.fixtures, `Stadium Name`)
-
+#Counting games injuries, stadiums, etc
+dplyr::count(mls.injury.fixtures, injury)            # Applying count function
+dplyr::count(mls.injury.fixtures, Games)
+dplyr::count(mls.fixtures, `Stadium Name`)
 dplyr::count(mls.injury.fixtures, Position_Group)
-
-
 dplyr::count(mls.injury.fixtures, Surface)
 dplyr::count(mls.fixtures, Surface)
 
+#Counting Max minutes per game. This is counting minutes played on each surface.
 games_played_per_player_surface.t <- mls.player.fixtures %>%
   group_by(Surface,MatchID) %>%
   summarise(max = max(Min, na.rm=TRUE))
@@ -88,11 +89,16 @@ games_played_per_player_surface.t %>%
   group_by(Surface) %>% 
   count(max) 
 
+#Calculating Games played 
 trial <- mls.player.fixtures
 
-trial <- trial[complete.cases(trial[ , c('Season_Mins')]), ] 
+trial <- trial[complete.cases(trial[ , c('Season_Mins')]), ]
 
-# Creating vectors for each column
+games_played_per_player_surface <- trial %>%
+  group_by(Surface) %>%
+  summarize(GamesPlayed = n())
+
+# Creating Tables comparing surfaces
 df1 <- data.frame(
   Injury = c(rep("Injured", 227), rep("Not-Injured", 13453)),
   Surface = c(rep("Field Turf", 13680))
@@ -107,6 +113,8 @@ df3 <- data.frame(
   Injury = c(rep("Injured", 82), rep("Not-Injured", 4174)),
   Surface = c(rep("Hybrid", 4256))
 )
+
+#Chi-Square Tests being performed
 chi.test <- rbind(df1,df2)
 chisq.test(chi.test$Surface, chi.test$Injury, correct=FALSE)
 table(chi.test)
@@ -117,17 +125,10 @@ chisq.test(chi.test2$Surface, chi.test2$Injury, correct=FALSE)
 chi.test3 <- rbind(df2,df3)
 chisq.test(chi.test3$Surface, chi.test3$Injury, correct=FALSE)
 
-
-
-games_played_per_player_surface <- trial %>%
-  group_by(Surface) %>%
-  summarize(GamesPlayed = n())
-
+#Counting Injury Severity Based on Player Position on Surface.
 mls.player.fixtures %>% 
-  #group_by(Surface.x) %>% 
   distinct(PlayerId) %>%
   n_distinct()
-
 
 mls.injury.fixtures %>% 
   group_by(Surface) %>% 
@@ -149,14 +150,13 @@ mls.injury.fixtures %>%
   group_by(Position_Group) %>% 
   count(`Major (28+ Days)`) 
 
-#mls.injury.fixtures$
 dplyr::count(mls.player.fixtures, Position_Group)
 
+#Counting Per Player and Surface
 mls.player.fixtures %>% 
   group_by(PlayerId) %>% 
   count(Position_Group) 
 
-
 #Injury by Surface Type
 mls.injury.fixtures %>% 
   group_by(Surface) %>% 
@@ -175,6 +175,8 @@ mls.injury.fixtures %>%
   group_by(Surface) %>% 
   count(`Major (28+ Days)`) 
 
+
+#Tables of Injury Severity
 df1.sev <- data.frame(
   Injury = c(rep("Major", 106), rep("Not-Major", 13574)),
   Surface = c(rep("Field Turf", 13680))
@@ -187,8 +189,10 @@ df2.sev <- data.frame(
 
 df.sev <- rbind(df1.sev,df2.sev)
 
+#Chi-Square Injury Severity
 chisq.test(df.sev$Surface, df.sev$Injury, correct=FALSE)
 
+#Moderate Injuries
 df1.mod <- data.frame(
   Injury = c(rep("Moderate", 104), rep("Not-Moderate", 13576)),
   Surface = c(rep("Field Turf", 13680))
@@ -203,7 +207,7 @@ df.mod <- rbind(df1.mod,df2.mod)
 
 chisq.test(df.mod$Surface, df.mod$Injury, correct=FALSE)
 
-
+#Minor Injuries
 df1.light <- data.frame(
   Injury = c(rep("Minor", 14), rep("Not-Minor", 13666)),
   Surface = c(rep("Field Turf", 13680))
@@ -218,6 +222,7 @@ df.light <- rbind(df1.light,df2.light)
 
 chisq.test(df.light$Surface, df.light$Injury, correct=FALSE)
 
+#Data Frame of Injury Severity
 surface <- c("Artifical Turf", "Natural Grass", "Hybrid Surface")
 injs.sev <- c("Slight (1-3 Days)", "Minor (4-7 Days)", "Moderate (8-28 Days)","Major (28+ Days)")
 InjSev <-  data.frame(
@@ -226,7 +231,7 @@ InjSev <-  data.frame(
   "Injury_Count" = c(3,40,36,106,6,12,104,266,0,14,318,34)
 )
 
-
+#Joining Injury Count to Severity 
 total_injuries <- InjSev %>%
   group_by(Surface) %>%
   summarise(total_injury_count = sum(Injury_Count)) %>%
@@ -240,12 +245,11 @@ InjSev <- InjSev %>%
 InjSev <- InjSev %>%
   mutate(Percentage = (Injury_Count / total_injury_count) * 100)
 
-
 # Reorder the levels of Injury_Severity
 InjSev$Injury_Severity <- factor(InjSev$Injury_Severity, levels = c("Minor (4-7 Days)","Moderate (8-28 Days)","Major (28+ Days)","Slight (1-3 Days)"))
 InjSev_filtered <- filter(InjSev, Injury_Severity != "Slight (1-3 Days)")
 
-
+#Plotting Injury Severity
 ggplot(InjSev_filtered, aes(x = reorder(Surface, -total_injury_count), y = Percentage, fill = Injury_Severity)) +
   geom_bar(stat = "identity") +
   labs(title = "Percentage Breakdown of Injury Severity by Surface Type",
@@ -260,9 +264,8 @@ ggplot(InjSev_filtered, aes(x = reorder(Surface, -total_injury_count), y = Perce
   theme_niall() +
   scale_y_continuous(labels = scales::percent_format(scale = 1))
 
-
-
-pt2 <- mls.injury.fixtures %>% 
+#Injuries over Season **Line Plot**
+line.plot <- mls.injury.fixtures %>% 
   filter(`Games` < 35) %>% 
   group_by(Games) %>% summarise(num_players = n_distinct(PlayerId)) %>% 
   ggplot(aes(x=Games, y=num_players)) +
@@ -274,11 +277,12 @@ pt2 <- mls.injury.fixtures %>%
   scale_x_continuous(breaks = seq(0, 34, by = 4)) +
   scale_y_continuous(breaks = seq(0, 50, by = 5))
 
+line.plot
 # Define custom colors for each category
 custom_colors <- c("Grass" = "#4daf4a", "Field Turf" = "#e41a1c", "Hybrid" = "blue")
 
-
-pt3 <- mls.injury.fixtures %>% 
+#Injuries over Season per Surface **Line Plot**
+line.plot.surface <- mls.injury.fixtures %>% 
   filter(Games < 35) %>% 
   group_by(Games, Surface) %>% 
   summarise(num_players = n_distinct(PlayerId)) %>% 
@@ -292,28 +296,25 @@ pt3 <- mls.injury.fixtures %>%
   scale_y_continuous(breaks = seq(0, 50, by = 5)) +
   scale_color_manual(values = custom_colors)  # Set custom colors
 
-pt3
+line.plot.surface
 
+#Histogram plotting minutes and Injuries
+minute.breakdown.game <- select(mls.injury.fixtures,`Min`)
 
-
-test <- select(mls.injury.fixtures,`Min`)
-
-filtered_data <- test %>%
+filtered_data_minute <- minute.breakdown.game %>%
   filter(Min <= 90 | !is.na(Min))
 
-filtered_data <- filtered_data %>%
+filtered_data_minute <- filtered_data_minute %>%
   mutate(Min_Bin = cut(Min, breaks = seq(0, 90, by = 5), labels = FALSE))
 
-filtered_data$bin_group <- ifelse(filtered_data$Min_Bin <= 9, "First Half", "Second Half")
+filtered_data_minute$bin_group <- ifelse(filtered_data_minute$Min_Bin <= 9, "First Half", "Second Half")
 
 # Define colors for the two groups
 group_colors <- c("First Half" = "#4daf4a", "Second Half" = "#e41a1c")
 
-# Create the plot
-ggplot(filtered_data, aes(x = Min_Bin, fill = bin_group)) +
+# Histogram of Minute Breakdown
+ggplot(filtered_data_minute, aes(x = Min_Bin, fill = bin_group)) +
   geom_histogram(binwidth = 1, color = "black") +
- # geom_vline(xintercept = x_intercept, linetype = "dashed", color = "red") +
- # geom_text(aes(x = x_intercept, y = 9, label = "Half Time"), color = "red", vjust = 1) +
   labs(x = "Binned Time (every 5 minutes)", y = "Injury Count", 
        title = "Histogram of Injuries in 5-Minute Intervals",
        subtitle = "Each bar represents a 5-minute interval of a game",
@@ -322,21 +323,15 @@ ggplot(filtered_data, aes(x = Min_Bin, fill = bin_group)) +
   theme_niall() +
   scale_x_continuous(breaks = seq(0, 18, by = 3))
 
-
-
-
-
+#DataFrame of Injuries and Surface
 games <-  data.frame(
   "Games" = c(1126, 3233, 370),
   "Surface" = c("Field Turf", "Grass", "Hybrid"),
   "Injury_Count" = c(227,630,82)
 )
 
-#games$Injury_Rate <- (games$Injury_Count / games$Games)
-
-
-p1 <- games %>% 
-  #count(injury) %>% 
+#Plotting games and Injuries on Surface Type
+plot.games <- games %>% 
   ggplot(aes(x= Surface, y= Games, fill = Surface)) +
   geom_col(alpha = 0.6) +
   labs(x= "Surface Type", y= "Number of Games") +
@@ -344,8 +339,7 @@ p1 <- games %>%
   coord_flip() + theme_niall() +
   scale_color_manual(values = custom_colors)
 
-
-p2 <- games %>% 
+plot.injury <- games %>% 
   #count(injury) %>% 
   ggplot(aes(x= Surface, y= Injury_Count,fill = Surface)) +
   geom_col(alpha = 0.6) +
@@ -354,15 +348,11 @@ p2 <- games %>%
   coord_flip() + theme_niall() +
   scale_color_manual(values = custom_colors)
 
+#Merging Two Charts Together
+gridExtra::grid.arrange(plot.games, plot.injury)
 
-
-gridExtra::grid.arrange(p1, p2)
-
-
-
-
-
-games %>% 
+#Plotting Percentages
+plot.injury.pct <-  games %>% 
   group_by(Surface) %>% 
   mutate(perc_injured = Injury_Count / Games) %>% 
   ggplot(aes(x= Surface, y= perc_injured, fill = Surface)) +
@@ -370,22 +360,14 @@ games %>%
   geom_text(aes(label = percent(perc_injured)), vjust=1, size = 7, colour = "black") +
   geom_hline(yintercept = 0.1986, linetype = "dashed", colour = "purple", size = 0.1,) +
   annotate(geom = "text", x=1, y= 0.1286, label = "Injuries occur on\n19.86% of all Games", colour = "purple", size = 5) +
-  ggtitle("MORE LIKELY TO BE INJURED ON SYNTHETIC OR Hybrid SURFACES", subtitle = "Of over 4729 Games analysed, injuries occured more frequently on \nSynthetic and Hybrid Surfaces") +
+  ggtitle("MORE LIKELY TO BE INJURED ON SYNTHETIC OR HYBRID SURFACES", subtitle = "Of over 4729 Games analysed, injuries occured more frequently on \nSynthetic and Hybrid Surfaces") +
   theme_niall() +
   scale_color_manual(values = custom_colors) +
   theme(axis.title.y = element_blank(), axis.text.y = element_blank())
 
+plot.injury.pct
 
-
-mls.injury.fixtures %>% 
-  count(Position_Group) %>%
-  ggplot(aes(x= Position_Group, y= n)) +
-  geom_col(fill = "#4daf4a", colour = "#4daf4a", alpha = 0.6) +
-  labs(x= "Field Position", y= "Number of Injuries") +
-  ggtitle("Breakdown of MLS Games Based on Surface Type") +
-  coord_flip() + theme_niall()
-
-####Positon Breakdown####
+####Positon Breakdown and Injury Severity####
 position.games <-  data.frame(
   "Injury_Severity" = c("Slight(1-3)","Minor(4-7)","Moderate(8-28)","Major(28+)",
                         "Slight(1-3)","Minor(4-7)","Moderate(8-28)","Major(28+)",
@@ -401,7 +383,8 @@ position.games <-  data.frame(
   "Injury_Count" = c(1,16,57,25,0,14,52,73,5,7,23,13,1,15,94,102,1,6,12,58,0,8,141,75,1,0,79,60)
 )
 
-pos1 <- mls.injury.fixtures %>% 
+#Positional Injury Breakdown
+position.chart.1 <- mls.injury.fixtures %>% 
   #group_by(Surface) %>% 
   count(Position_Group) %>%
   ggplot(aes(x= Position_Group, y= n)) +
@@ -411,7 +394,7 @@ pos1 <- mls.injury.fixtures %>%
   coord_flip() + theme_niall()
 
 
-pos2 <- position.games %>%
+position.chart.2 <- position.games %>%
   group_by(Position) %>%
   mutate(perc_injury = Injury_Count / sum(Injury_Count) * 100) %>%
   ggplot(aes(x = Position, y = perc_injury, fill = Injury_Severity)) +
@@ -427,67 +410,25 @@ pos2 <- position.games %>%
   scale_y_continuous(labels = scales::percent_format(scale = 1)) +
   coord_flip()
 
-gridExtra::grid.arrange(pos1, pos2)
+gridExtra::grid.arrange(position.chart.1, position.chart.2)
 
 
+####Weather Variables####
+#Separating Matches Based On Injury
+mls.fixture.no.injury <- mls.fixtures[!(mls.fixtures$MatchID %in% mls.injury.fixtures$MatchID), , drop = FALSE]
 
+#Selecting Weather Variables
+mls.fixture.no.injury <- select(mls.fixture.no.injury, 9,20, 22:28,30:34)
+mls.fixture.no.injury$MatchInjury <- rep("No",3952)
+mls.injury.fixtures.yes<- select(mls.injury.fixtures,20,25:32,34:38)
 
+mls.injury.fixtures.yes$MatchInjury <- rep("Yes",939)
 
+#MLS Weather Dataset
+mls.weatherdataset <- rbind(mls.injury.fixtures.yes,mls.fixture.no.injury)
 
-###Weather 
-
-# mls.injury.fixtures %>% 
-#   filter(Roof %in% c("Open")) %>% 
-#   distinct(MatchID) %>% 
-#   ggplot(aes(x= `temperature_2m (°C)`)) +
-#   geom_boxplot(alpha = 0.5) +
-#   scale_fill_manual(values = plot_cols, guide = "none") +
-#   scale_colour_manual(values = plot_cols, guide = "none") +
-#   ggtitle("INJURIES OCCUR EARLIER ON NATURAL SURFACES", subtitle = "28 records not included as exact play\nwhere injury occurred is unknown") +
-#   labs(x= "Field Type", y= "Game Play") +
-#   theme_niall()
-
-
-
-temp1 <- mls.injury.fixtures %>%
-  filter(Roof %in% c("Open")) %>% 
-  distinct(MatchID) %>% 
-  inner_join(mls.injury.fixtures, by = "MatchID") %>%
-  ggplot(aes(x = `temperature_2m (°C)`)) +
-  geom_boxplot(alpha = 0.5, fill = "pink", color = "red") +
-  ggtitle("Tempeartures With Injury", subtitle = "No Significant Difference can be seen Between Tempearture and Injury") +
-  labs(x = "Temperature (°C)") +
-  theme_bw() +
-  theme(axis.text.y = element_blank()) 
-
-
-# temp2 <- df3 %>%
-#   filter(Roof %in% c("Open")) %>% 
-#   distinct(MatchID) %>% 
-#   inner_join(df3, by = "MatchID") %>%
-#   ggplot(aes(x = `temperature_2m (°C)`)) +
-#   geom_boxplot(alpha = 0.5, fill = "lightgreen", color = "green") +
-#   ggtitle("Tempeartures With No Injury") +
-#   labs(x = "Temperature (°C)") +
-#   theme_bw() +
-#   theme(axis.text.y = element_blank()) 
-
-gridExtra::grid.arrange(temp1, temp2)
-
-
-df3 <- mls.fixtures[!(mls.fixtures$MatchID %in% mls.injury.fixtures$MatchID), , drop = FALSE]
-
-
-df3 <- select(df3, 9,20, 22:28,30:34)
-df3$MatchInjury <- rep("No",3952)
-mls.injury.fixtures.test <- select(mls.injury.fixtures,20,25:32,34:38)
-
-mls.injury.fixtures.test$MatchInjury <- rep("Yes",939)
-
-mls.weatherdataset <- rbind(mls.injury.fixtures.test,df3)
-
-
-
+#MLS Weather Dataset Candle Plots
+#Precipitation
 w1 <- mls.weatherdataset %>% 
   filter(Roof %in% c("Open"),`precipitation (mm)` > 0) %>% 
   distinct(MatchID, `precipitation (mm)`, MatchInjury) %>% 
@@ -496,10 +437,11 @@ w1 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x= "Player Injured?") +
-  ggtitle("Precipitation", subtitle = "While injuries tend to occur in slightly lower\nprecipitation levels, doesn't look significant") +
+  ggtitle("Precipitation") +
   coord_flip() +
   theme_niall()
 
+#Wind Speed
 w2 <- mls.weatherdataset %>% 
   filter(Roof %in% c("Open")) %>% 
   distinct(MatchID, `wind_speed_10m (km/h)`, MatchInjury) %>% 
@@ -508,10 +450,11 @@ w2 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x= "Player Injured?") +
-  ggtitle("Wind Speed", subtitle = "While injuries tend to occur in slightly higher\nwind speed, doesn't look significant") +
+  ggtitle("Wind Speed") +
   coord_flip() +
   theme_niall()
 
+#Humidity
 w3 <- mls.weatherdataset %>% 
   filter(Roof %in% c("Open")) %>% 
   distinct(MatchID, `relative_humidity_2m (%)`, MatchInjury) %>% 
@@ -520,11 +463,11 @@ w3 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x= "Player Injured?") +
-  ggtitle("Relative Humidity", subtitle = "While injuries tend to occur in slightly lower\nhumidity, doesn't look significant") +
+  ggtitle("Relative Humidity") +
   coord_flip() +
   theme_niall()
 
-
+#Cloud Cover
 w4 <- mls.weatherdataset %>% 
   filter(Roof %in% c("Open")) %>% 
   distinct(MatchID, `cloud_cover (%)`, MatchInjury) %>% 
@@ -533,11 +476,11 @@ w4 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x= "Player Injured?") +
-  ggtitle("Cloud Cover", subtitle = "While injuries tend to occur in slightly lower\ncloud cover %, doesn't look significant") +
+  ggtitle("Cloud Cover") +
   coord_flip() +
   theme_niall()
 
-
+#Soil Temperature
 w5 <- mls.weatherdataset %>% 
   filter(Roof %in% c("Open")) %>% 
   distinct(MatchID, `soil_temperature_0_to_7cm (°C)`, MatchInjury) %>% 
@@ -546,10 +489,11 @@ w5 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x= "Player Injured?") +
-  ggtitle("Soil Temperature", subtitle = "While injuries tend to occur in slightly lower\nsoil temperatures, doesn't look significant") +
+  ggtitle("Soil Temperature") +
   coord_flip() +
   theme_niall()
 
+#Soil Moisture
 w6 <- mls.weatherdataset %>%
   filter(Roof %in% c("Open")) %>%
   distinct(MatchID, `soil_moisture_0_to_7cm (m³/m³)`, MatchInjury) %>%
@@ -558,11 +502,11 @@ w6 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x = "Player Injured?") +
-  ggtitle("Soil Moisture", subtitle = "While injuries tend to occur in slightly lower\nsoil moisture, doesn't look significant") +
+  ggtitle("Soil Moisture") +
   coord_flip() +
   theme_niall()
 
-
+#Temperature
 w7 <- mls.weatherdataset %>%
   filter(Roof %in% c("Open")) %>%
   distinct(MatchID, `temperature_2m (°C)`, MatchInjury) %>%
@@ -571,11 +515,11 @@ w7 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x = "Player Injured?") +
-  ggtitle("Temperature", subtitle = "While injuries tend to occur in slightly lower\ntemperature, doesn't look significant") +
+  ggtitle("Temperature") +
   coord_flip() +
   theme_niall()
 
-
+#Apparent Temperature 
 w8 <- mls.weatherdataset %>%
   filter(Roof %in% c("Open")) %>%
   distinct(MatchID, `apparent_temperature (°C)`, MatchInjury) %>%
@@ -584,24 +528,23 @@ w8 <- mls.weatherdataset %>%
   scale_fill_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   scale_colour_manual(values = c("#00b300", "#cc0000"), guide = "none") +
   labs(x = "Player Injured?") +
-  ggtitle("Apparent Temperature", subtitle = "While injuries tend to occur in slightly lower\napparent temperature, doesn't look significant") +
+  ggtitle("Apparent Temperature") +
   coord_flip() +
   theme_niall()
 
+#Plotting All 8 Charts Together
 gridExtra::grid.arrange(w1, w2, w3, w4, w5,w6,w7,w8, nrow = 4)
 
-gridExtra::grid.arrange(w1, w2, w3, w4, w5,w6, nrow = 3)
 
+#Absolute Goal Difference of Fixtures
+mls.fixtures$absolute_difference <- abs(mls.fixtures$HomeGoals - mls.fixtures$AwayGoals)
+mls.injury.fixtures$absolute_difference <- abs(mls.injury.fixtures$HomeGoals - mls.injury.fixtures$AwayGoals)
 
+#Count Absolute Goal Difference
+dplyr::count(mls.fixtures, absolute_difference)
+dplyr::count(mls.injury.fixtures, absolute_difference)
  
- #ABS
- mls.fixtures$absolute_difference <- abs(mls.fixtures$HomeGoals - mls.fixtures$AwayGoals)
- mls.injury.fixtures$absolute_difference <- abs(mls.injury.fixtures$HomeGoals - mls.injury.fixtures$AwayGoals)
- 
- dplyr::count(mls.fixtures, absolute_difference)
- dplyr::count(mls.injury.fixtures, absolute_difference)
- 
- 
+#Absolute goal Difference Injury Fixtures
  abs1 <- mls.injury.fixtures %>% 
    group_by(absolute_difference) %>% 
    count(absolute_difference)
@@ -613,24 +556,19 @@ gridExtra::grid.arrange(w1, w2, w3, w4, w5,w6, nrow = 3)
  
  insert_index <- 7
  
- # Split the dataframe into two parts
- df_above <- abs1[1:(insert_index - 1), ]
- df_below <- abs1[insert_index:nrow(abs1), ]
+#Split the dataframe into two parts
+df_above <- abs1[1:(insert_index - 1), ]
+df_below <- abs1[insert_index:nrow(abs1), ]
  
- # Combine the two parts with the new row inserted in between
- abs1 <- rbind(df_above, new_row, df_below)
+# Combine the two parts with the new row inserted in between
+abs1 <- rbind(df_above, new_row, df_below)
  
- # Reset row names
- #rownames(abs1) <- NULL
- 
- #abs1 <- rbind(abs1,new_row) 
- 
- 
- abs2 <- mls.fixtures %>% 
+#Absolute Goal Differecne of Fixtures
+abs2 <- mls.fixtures %>% 
    group_by(absolute_difference) %>% 
    count(absolute_difference)
 
- abs2 <- na.omit(abs2)
+abs2 <- na.omit(abs2)
  
 mls.scores <- cbind(abs1,abs2) 
 
@@ -642,6 +580,7 @@ mls.scores$Injury_Percentage <- (mls.scores$Injury_Count / mls.scores$Total_Game
 
 mls.scores$Absolute_Goal_Difference <- as.character(mls.scores$Absolute_Goal_Difference)
 
+#Bar plot of Absolute Goal Difference
 mls.scores %>% 
   ggplot(aes(x= Absolute_Goal_Difference, y= Injury_Percentage)) +
   geom_col(fill = "#e41a1c", colour = "#e41a1c", alpha = 0.6) +
@@ -650,35 +589,36 @@ mls.scores %>%
   ggtitle("Breakdown of MLS Injuries Based on Game Situation", subtitle = "The relationship Between Goal Difference and Injury\nDoesn't look to be significant") +
   theme_niall() 
   
-
+#Comparing Home and Away Fixtures Based on Surface Type
 mls.home.away <- mls.injury.fixtures$Away
 mls.home.surface <- mls.injury.fixtures$Surface
 
-
+#Data Frame of Surfaces and Home Fixtures
 mls.home.away <- data.frame(mls.home.away,
                             mls.home.surface)
 
-test <-  mls.home.away %>%
+#Not Home Fixtures
+mls.not.home <-  mls.home.away %>%
   mutate(HomeVsAway = case_when(mls.home.away  != "NA"  ~ "Home",
                                              TRUE ~ "Away"))
 
-dplyr::count(test, HomeVsAway)
+dplyr::count(mls.not.home, HomeVsAway)
 
-dplyr::count(test, mls.home.surface)
+dplyr::count(mls.not.home, mls.home.surface)
 
-trial <- test %>% 
+#Groupping Togther Based On surface
+mls.home.surface.injury <- mls.not.home %>% 
   group_by(mls.home.surface) %>% 
   count(HomeVsAway)
 
+mls.home.surface.injury$SurfaceGames <- c(227,227,630,630,82,82)
 
-trial$SurfaceGames <- c(227,227,630,630,82,82)
+colnames(mls.home.surface.injury) <- c("SurfaceType", "HomeVsAway","InjuryCount","SurfaceGames")
 
-colnames(trial) <- c("SurfaceType", "HomeVsAway","InjuryCount","SurfaceGames")
+mls.home.surface.injury$Injury_Percentage <- (mls.home.surface.injury$InjuryCount / mls.home.surface.injury$SurfaceGames) * 100
 
-trial$Injury_Percentage <- (trial$InjuryCount / trial$SurfaceGames) * 100
-
-
-trial %>%
+#Stacked Bar Plot Of Injury Based on Team Surface
+mls.home.surface.injury %>%
   ggplot(aes(x = SurfaceType, y = Injury_Percentage, fill = HomeVsAway)) +
   geom_bar(stat = "identity", position = "stack") +
   geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")),
@@ -689,8 +629,8 @@ trial %>%
           subtitle = "The Stacked Bar chart shows a signifcant difference in Injury Percentage \nwith teams who play most games on Field Turf") +
   theme_niall() 
 
+#Stadium Count of Injuries
 stad <- dplyr::count(mls.injury.fixtures, `Stadium Name`)
-
 
 stad <- dplyr::count(mls.injury.fixtures, `Stadium Name`)
 
@@ -706,29 +646,18 @@ stadium <- unique(stadium)
 
 colnames(stadium) <- c("Stadium Name", "Injury_Count","Games","Surface")
 
-
-
 stadium$Injury_Percentage <- (stadium$Injury_Count / stadium$Games) * 100
 
-#mls.scores$Absolute_Goal_Difference <- as.character(mls.scores$Absolute_Goal_Difference)
-
-stadium %>% 
-  ggplot(aes(x= stadium, y= Injury_Percentage, fill = surface)) +
-  geom_col(fill = plot_cols[6], colour = plot_cols[6], alpha = 0.6) +
-  geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")), vjust = -0.5, size = 3, color = "black") +  # Add percentages on bars
-  labs(x= "Absolute Goal Difference", y= "Percentage of Injuries") +
-  ggtitle("Breakdown of MLS Injuries Based on Game Situation", subtitle = "The relationship Between Goal Difference and Injury\nDoesn't look to be significant") +
-  theme_niall() 
-
+#Filter Based on a minimu of 15 Games on A stadium
 stadium <- stadium %>% 
   filter(Games > 15)
 
 clipr::write_clip(stadium)
 
-
+#Plot Top 8 stadiums
 top_stadiums <- head(stadium[order(-stadium$Injury_Percentage),], 8)
 
-# Create the bar plot
+# Bar Plot of highest Stadium Injury Rates
 stad1 <- ggplot(top_stadiums, aes(x = reorder(`Stadium Name`, Injury_Percentage), y = Injury_Percentage, fill = Surface)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = paste0(round(Injury_Percentage, 1), "%")), vjust = -0.5, size = 6, color = "black") +  # Add percentages on bars
@@ -738,14 +667,11 @@ stad1 <- ggplot(top_stadiums, aes(x = reorder(`Stadium Name`, Injury_Percentage)
   theme_niall() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-
-
-#stadium2 <- subset(stadium, `Stadium Name` %in% c("Camping World Stadium", "TCF Bank Stadium"))
-
+stad1
+#Remove Unactive Stadiums 
 stadium2 <- subset(stadium, !(grepl("Camping World Stadium", `Stadium Name`, ignore.case = TRUE) | grepl("TCF Bank Stadium", `Stadium Name`, ignore.case = TRUE)))
 
 stadium2 <- head(stadium2[order(-stadium2$Injury_Percentage),], 8)
-
 
 stad2 <- ggplot(stadium2, aes(x = reorder(`Stadium Name`, Injury_Percentage), y = Injury_Percentage, fill = Surface)) +
   geom_bar(stat = "identity") +
@@ -756,15 +682,13 @@ stad2 <- ggplot(stadium2, aes(x = reorder(`Stadium Name`, Injury_Percentage), y 
   theme_niall() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1))
 
-###############################Trial#############################################
-# Assuming you have a data frame called player_data with columns: PlayerID, Surface, GamesPlayed
-# Assuming you have a data frame called player_data with columns: PlayerID, Surface
+stad2
 
-
+### Manipulating Data for Kaplan Meier###
+#Grouping Data by Surface and Match ID
 games_played_per_player_surface.t <- mls.player.fixtures %>%
   group_by(Surface,MatchID) %>%
   summarise(max = max(Min, na.rm=TRUE))
-
 
 # Count the number of games played per player ID
 games_played_per_player_surface <- mls.player.fixtures %>%
@@ -807,15 +731,7 @@ print(players_majority_grass_data)
 print("Players who played the majority of games on field turf:")
 print(players_majority_turf_data)
 
-
-
-
-
-
-
-
-
-
+#Filter based on Surface
 majority_surface <- games_played_per_player_surface %>%
   group_by(URL) %>%
   summarize(MajoritySurface = Surface[which.max(GamesPlayed)])
@@ -832,8 +748,7 @@ filtered_data <- games_played_per_player_surface %>%
 # Print the filtered data
 print(filtered_data)
 
-
-
+#Hybrid Majority
 urls_majority_hybrid <- majority_surface %>%
   filter(MajoritySurface == "Hybrid") %>%
   pull(URL)
@@ -841,38 +756,35 @@ urls_majority_hybrid <- majority_surface %>%
 filtered_data2 <- games_played_per_player_surface %>%
   filter(URL %in% urls_majority_hybrid)
 
-
-
+#Grass majority
 urls_majority_grass <- majority_surface %>%
   filter(MajoritySurface == "Grass") %>%
   pull(URL)
 
-
-
+#Filter Based on Grass by URL
 filtered_data3 <- games_played_per_player_surface %>%
   filter(URL %in% urls_majority_grass)
 
-
-
+#Minimum of 10 games Played for Each Surface
 filtered_data <- filtered_data %>%
   filter(GamesPlayed > 10)
-
 
 filtered_data2 <- filtered_data2 %>%
   filter(GamesPlayed > 10)
 
-
 filtered_data3 <- filtered_data3 %>%
   filter(GamesPlayed > 10)
 
-
+#Complete Rows of Grass
 filtered_data3 <- filtered_data3[complete.cases(filtered_data3),]
 
-unique_values  <- unique(filtered_data$URL)
+#URL of Turf,Grass, Hybrid
+unique_values <- unique(filtered_data$URL)
 unique_values2 <- unique(filtered_data2$URL)
 unique_values3 <- unique(filtered_data3$URL)
 
-#######**Grass**####################
+
+#######**Filtering Based on Grass**########
 grass.matches <- mls.player.fixtures %>%
   filter(URL %in% unique_values3)
 
@@ -885,22 +797,17 @@ grass.matches <- grass.matches %>%
   group_by(Date, MatchID) %>%
   mutate(Game_Number = cur_group_id())
 
-# grass.matches <- mls.player.fixtures %>%
-#   filter(URL %in% unique_values)
-
 grass.matches$game_injury <- ifelse(is.na(grass.matches$injury), 0, 1)
 
 grass.matches$Date <- as.Date(grass.matches$Date)
 
+#Arranging Matches  by date and Game Number
 grass.matches <- grass.matches %>%
   arrange(Date) %>%
   group_by(Date, MatchID) %>%
   mutate(Game_Number = cur_group_id())
 
-
-hybrid.matches <- mls.player.fixtures %>%
-  filter(URL %in% unique_values2)
-
+#Start at 100 Percent 
 grass.matches$Percent <- 100
 
 # Function to update Percent based on Injury
@@ -924,8 +831,7 @@ update_percent <- function(grass.matches) {
 # Update Percent column based on Injury
 grass.matches <- update_percent(grass.matches)
 
-
-
+#Percentages are kept as result
 highest_game_number_per_percentage <- function(grass.matches) {
   result <- aggregate(Game_Number ~ Percent, grass.matches, max)
   return(result)
@@ -944,7 +850,8 @@ print(df.grass)
 
 # Print the updated dataframe
 head(highest_game_numbers)
-################################################################################################################
+#######**Filtering Based on Field Turf**#######
+#Same Process to Grass is Applied to Field Turf
 turf.matches <- mls.player.fixtures %>%
   filter(URL %in% unique_values)
 
@@ -968,10 +875,6 @@ turf.matches <- turf.matches %>%
   arrange(Date) %>%
   group_by(Date, MatchID) %>%
   mutate(Game_Number = cur_group_id())
-
-
-#hybrid.matches <- mls.player.fixtures %>%
-#  filter(URL %in% unique_values2)
 
 turf.matches$Percent <- 100
 
@@ -996,8 +899,6 @@ update_percent <- function(turf.matches) {
 # Update Percent column based on Injury
 turf.matches <- update_percent(turf.matches)
 
-
-
 highest_game_number_per_percentage <- function(turf.matches) {
   result <- aggregate(Game_Number ~ Percent, turf.matches, max)
   return(result)
@@ -1017,115 +918,46 @@ print(df.turf)
 # Print the updated dataframe
 head(highest_game_numbers)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#Grass and Field Turf being assigned Kaplan datasets
 grass.Kaplan <- df.grass
 
 turf.Kaplan <- df.turf
 
-#*
+#Reducing Grass Games to 3000 to compare
 grass.Kaplan <- grass.Kaplan %>% filter(Game_Number < 3000)
 
 string_to_replicate <- "Grass"
 
-# Replicate the string for each row and assign it to a new column
+#Replicate the string for each row and assign it to a new column
 grass.Kaplan$Surface <- rep(string_to_replicate, nrow(grass.Kaplan))
 
-
+#Replicating Field Turf
 string_to_replicate <- "Field Turf"
 turf.Kaplan$Surface <- rep(string_to_replicate, nrow(turf.Kaplan))
-#*
-new_row <- data.frame(
-  Percent = 51.59420, 
-  Game_Number = 3000,
-  Surface = "Field Turf"
-)
-  
-turf.Kaplan <- rbind(turf.Kaplan, new_row)
-
-# Replicate the string for each row and assign it to a new column
-#turf.Kaplan$Surface <- rep(string_to_replicate, nrow(turf.Kaplan))
-
 
 # Assuming you have grass.Kaplan and turf.Kaplan data frames
 datadata = rbind(grass.Kaplan, turf.Kaplan)
 
 datadata$Injury <- 1
 
-
 datadata <- datadata[,-1]
 
 game_numbers_grass <- 1:4730
-game_numbers_hybrid <- 1:2826
+game_numbers_field_turf <- 1:2826
 
 # Create a data frame with all combinations of game numbers and surfaces
 all_combinations <- data.frame(
   Game_Number = c(rep(game_numbers_grass, each = length(unique(datadata$Surface))),
-                 rep(game_numbers_hybrid, each = length(unique(datadata$Surface)))),
+                 rep(game_numbers_field_turf, each = length(unique(datadata$Surface)))),
   Surface = c(rep("Grass", length(game_numbers_grass) * length(unique(datadata$Surface))),
-              rep("Field Turf", length(game_numbers_hybrid) * length(unique(datadata$Surface))))
+              rep("Field Turf", length(game_numbers_field_turf) * length(unique(datadata$Surface))))
 )
 
 # Merge with existing data and fill missing values with 0
 complete_data <- merge(all_combinations, datadata, by = c("Game_Number", "Surface"), all.x = TRUE) %>%
   mutate(Injury = ifelse(is.na(Injury), 0, 1))
 
-# Reorder columns if needed
+# Reorder columns 
 complete_data <- complete_data[, c("Game_Number", "Surface", "Injury")]
 
 # Print the complete data frame
@@ -1133,134 +965,37 @@ print(complete_data)
 
 complete_data <- unique(complete_data)
 
-
 complete_data2 <- subset(complete_data, Game_Number < 2827)
 
-
+#Applying Kaplan-Meier
 km_fit <- survfit(Surv(Game_Number, Injury) ~ Surface, data = complete_data2)
 
 # Plot Kaplan-Meier curves
-ggsurvplot(km_fit, data = complete_data, risk.table = TRUE,
+ggsurvplot(km_fit, data = complete_data2, risk.table = TRUE,
            pval = TRUE, conf.int = TRUE,
            ggtheme = theme_niall(),
            palette = c( "#e41a1c","#4daf4a"), # Custom colors for curves
            linetype = c("solid", "dashed"))   # Custom line types for curves
 
-
-
-
-
-
-#chisq.test()
-
 table(datadata$Surface)
 
-# Subset the larger group to match the length of the smaller group
-subset_data <- datadata[datadata$Surface == "Grass", ]  # Assuming "Grass" has fewer observations
-subset_data <- subset_data[1:nrow(datadata[datadata$Surface == "Field Turf", ]), ]
-
-
-subset_df <- grass.Kaplan[c(FALSE, TRUE), ]
-
-indices_to_remove <- sample(1:nrow(subset_df), 22)  # Select 21 random row indices to remove
-
-# Remove the selected rows
-subset_df <- subset_df[-indices_to_remove, ]
-
-
-t.test.data <- rbind(subset_df,turf.Kaplan)
-# Now, both groups should have the same length
-table(subset_data$Surface)
-
-
-result <- t.test(Percent ~ Surface, data = t.test.data, paired = TRUE)
-
-datatdata
-
-
-data.grass.test <- grass.Kaplan
-data.ft.test <- turf.Kaplan
-
-# Create a new dataframe with Game_Number ranging from 1 to 244
-df_new <- data.frame(Game_Number = 1:3000)
-
-# Merge the original dataframe with the new one based on Game_Number
-df_new <- merge(df_new, data.grass.test, by = "Game_Number", all.x = TRUE)
-
-
-df_new$injury <- ifelse(is.na(df_new$Percent), 0, 1)
-df_new$Surface <- ifelse(is.na(df_new$Surface), "Grass", df_new$Surface)
-
-df_new <- df_new %>% select (1,3,4)
-
-
-df_new2 <- data.frame(Game_Number = 1:3000)
-
-# Merge the original dataframe with the new one based on Game_Number
-df_new2 <- merge(df_new2, data.ft.test, by = "Game_Number", all.x = TRUE)
-
-
-df_new2$injury <- ifelse(is.na(df_new2$Percent), 0, 1)
-df_new2$Surface <- ifelse(is.na(df_new2$Surface), "Field Turf", df_new2$Surface)
-
-df_new2 <- df_new2 %>% select (1,3,4)
-
-kaplan.test <- rbind(df_new2,df_new)
-
-
-km_fit <- survfit(Surv(Game_Number, injury) ~ Surface, data = kaplan.test)
-
-# Plot Kaplan-Meier curves
-ggsurvplot(km_fit, data = kaplan.test, risk.table = TRUE,
-           pval = TRUE, conf.int = TRUE,
-           ggtheme = theme_niall(),
-           palette = c("#4daf4a", "#e41a1c"), # Custom colors for curves
-           linetype = c("solid", "dashed"))   # Custom line types for curves
-
-
-
-ggsurvplot(km_fit, data = kaplan.test, risk.table = TRUE,
-           pval = TRUE, conf.int = TRUE,
-           ggtheme = theme_niall(),
-           palette = c("#4daf4a", "#e41a1c"), # Custom colors for curves
-           linetype = c("solid", "dashed")) +  # Custom line types for curves
-  labs(y = "Survival Probability",  # Customize y-axis label
-       title = "Kaplan-Meier Survival Plot")  # Add plot title
-
-
-
-
-ggplot() +
-  geom_line(data = rbind(grass.Kaplan, turf.Kaplan), aes(x = Game_Number, y = Percent, color = Surface, linetype = Surface), size = 2.5) +
-  scale_color_manual(values = c("Grass" = "#4daf4a", "Field Turf" = "#e41a1c")) +  # Custom colors for lines
-  scale_linetype_manual(values = c("Grass" = "solid", "Field Turf" = "solid")) +  # Set line types
-  theme_niall() +
-  labs(x = "Matches", y = "Injury Percentage (%)", title = "Kaplan–Meier Estimator Based On Surface Type",
-       subtitle = "Compared Player Injury Rates with players who played more than\n50% of Games on one surface.\nGrass Sample (n) = 1564       Field Turf Sample (n) = 345") +
-  annotate("text", x = 500, y = 60, label = "P-Value < 0.0001", size = 6)
-
-
-
-#######DayVSNight#######
-
+#######Day VS Night Fixtures#######
+#Grouping Based on Day VS Night
 mls.fixtures %>% 
     group_by(Surface) %>% 
     count(`is_day ()`) 
 
+#Getting Data frame together of Day vs Night Fixtures
 games.day.night <-  data.frame(
   "Games" = c(448, 678, 1652,1581,137,233),
   "Surface" = c("Field Turf","Field Turf", "Grass","Grass", "Hybrid","Hybrid"),
   "Injury_Count" = c(68,159,284,346,27,55),
   "Time" = c("Night","Day", "Night","Day", "Night","Day")
 )
-#games.day.night$Total <- ave(games.day.night$Injury_Count, games.day.night$Surface, FUN = sum)
+
 games.day.night$Percentage <- ((games.day.night$Injury_Count / games.day.night$Games)*100)
 
-
-# Create a stacked bar chart
-
-
-# Create a grouped bar chart
+# Grouped Bar chart
 # Define custom colors based on surface type and day/night time
 my_colors <- c("Field Turf_Day" = "#e41a1c", 
                "Field Turf_Night" = "#ff9999", 
@@ -1280,8 +1015,7 @@ ggplot(games.day.night, aes(x = Surface, y = Percentage, fill = paste(Surface, T
   theme_niall() +
   theme(legend.position = "bottom")  # Adjust legend position if necessary
 
-
-#tests 
+#Chi-sqaure Test Day vs Night in Injury Rate 
 grass.chi <- mls.weatherdataset %>%
   filter(Surface == "Grass")
 
@@ -1302,7 +1036,7 @@ names(mls.weatherdataset)[names(mls.weatherdataset) == "temperature_2m (°C)"] <
 # List of columns (variables) for which you want to perform t-tests
 columns_of_interest <- c("temperature_2m_C", "relative_humidity_2m (%)", "dew_point_2m (°C)", "apparent_temperature (°C)","precipitation (mm)","rain (mm)","soil_moisture_0_to_7cm (m³/m³)","soil_temperature_0_to_7cm (°C)","wind_speed_10m (km/h)","cloud_cover (%)" )
 
-
+#T-test of weather variables
 result1.01 <- t.test(`temperature_2m_C` ~ MatchInjury, data = mls.weatherdataset)
 result1.02 <- t.test(`relative_humidity_2m (%)` ~ MatchInjury, data = mls.weatherdataset)
 result1.03 <- t.test(`soil_temperature_0_to_7cm (°C)` ~ MatchInjury, data = mls.weatherdataset)
@@ -1312,28 +1046,19 @@ result1.06 <- t.test(`soil_moisture_0_to_7cm (m³/m³)` ~ MatchInjury, data = ml
 result1.07 <- t.test(`wind_speed_10m (km/h)` ~ MatchInjury, data = mls.weatherdataset)
 result1.08 <- t.test(`cloud_cover (%)` ~ MatchInjury, data = mls.weatherdataset)
 
-#Correlation Matrix 
-
+#Correlation Matrix of Weather Variables
 corr.data <- mls.weatherdataset %>% select(10:14,15)
-
-
-
 corr.data <- corr.data %>%
   mutate(MatchInjury = case_when(
     MatchInjury == "Yes" ~ 1,
     TRUE ~ 0
   ))
 
-
-
 correlation_matrix <- cor(corr.data)
 
 corrplot(correlation_matrix, method = "number")
 
-
-
-
-###################
+#######Correlation Matrix of Player Biometric Variables###########
 corr.data <- mls.player.fixtures
 
 corr.data$MatchInjury <- ifelse(is.na(corr.data$injury), 0, 1)
@@ -1353,6 +1078,8 @@ encoded2 <- model.matrix(~ Position_Group - 1, data = corr.data)
 # Convert the encoded matrix to a dataframe
 encoded_df2 <- as.data.frame(encoded2)
 
+#######Correlation Matrix of Player Biometric Positions###########
+
 test <- cbind(corr.data,encoded_df,encoded_df2)
 
 corr.data <- test %>% select(1:4,7:17)
@@ -1369,11 +1096,10 @@ correlation_matrix <- cor(corr.data2)
 
 corrplot(correlation_matrix, method = "number")
 
-######################################################
+######Player Injuries#########
 mls.injury.fixtures %>%
   group_by(Surface)  %>%
   count(Position_Group)
-
 
 t.tt <- mls.player.fixtures %>%
   group_by(Surface)  %>%
@@ -1381,11 +1107,9 @@ t.tt <- mls.player.fixtures %>%
 
 clipr::write_clip(t.tt)
 
-
-
 inj.type <- mls.injury.fixtures %>% count(injury)
 
-
+#Grouping Injuries Together
 mls.injury.fixtures <- mls.injury.fixtures %>%  
   mutate(Injury_Type = case_when( injury %in% c("Achilles tendon problems", "Achilles tendon rupture", "Adductor injury", "Adductor pain", "Cruciate ligament injury",
                                              "Cruciate ligament strain", "Cruciate ligament tear","Inner ligament injury","Inner ligament stretch of the knee",
@@ -1487,8 +1211,7 @@ mls.injury.fixtures <- mls.injury.fixtures %>%
                                TRUE ~ "Other"
   ))
 
-
-# Data
+# Injury Type Data Frame 
 data.inj.type <- data.frame(
   Surface = c("Field Turf", "Field Turf", "Field Turf", "Field Turf", "Field Turf",
               "Grass", "Grass", "Grass", "Grass", "Grass",
@@ -1510,12 +1233,12 @@ data.inj.type <- transform(data.inj.type,
 # Define custom colors
 my_colors <- c("#1f77b4", "#ff7f0e", "#2ca02c", "#d62728", "#9467bd")
 
-# Plot
+# Plot of Injury Types Based on Surface Type
 ggplot(data.inj.type, aes(x = Surface, y = Percent, fill = Injury_Type)) +
   geom_bar(stat = "identity") +
   geom_text(aes(label = sprintf("%.1f%%", Percent)), 
             position = position_stack(vjust = 0.5), 
-            size = 5, 
+            size = 7, 
             color = "white") +
   labs(title = "Distribution of Injury Types Across Surfaces",
        x = "Surface",
@@ -1529,15 +1252,12 @@ ggplot(data.inj.type, aes(x = Surface, y = Percent, fill = Injury_Type)) +
   theme(plot.title = element_text(hjust = 0.5)) +
   coord_flip()
 
-
+#Count of Injury Types and Surface
 mls.injury.fixtures %>%
        group_by(Surface) %>%
        count(Injury_Type)
 
-
-
-
-#Injury Type and Surface
+#Injury Type and Surface Chi-square Tests
 df1.joint <- data.frame(
   JointInjury = c(rep("Injured", 29), rep("Not-Injured", 13651)),
   Surface = c(rep("Field Turf", 13680))
@@ -1550,7 +1270,6 @@ df2.joint <- data.frame(
 
 chi.test.joint <- rbind(df1.joint,df2.joint)
 chisq.test(chi.test.joint$Surface, chi.test.joint$JointInjury, correct=FALSE)
-
 
 df1.lowerlimb <- data.frame(
   LowerLimbInjury = c(rep("Injured", 56), rep("Not-Injured", 13624)),
@@ -1565,7 +1284,6 @@ df2.lowerlimb <- data.frame(
 chi.test.lowerlimb <- rbind(df1.lowerlimb,df2.lowerlimb)
 chisq.test(chi.test.lowerlimb$Surface, chi.test.lowerlimb$LowerLimbInjury, correct=FALSE)
 
-
 df1.muscle <- data.frame(
   MuscleInjury = c(rep("Injured", 108), rep("Not-Injured", 13572)),
   Surface = c(rep("Field Turf", 13680))
@@ -1579,8 +1297,6 @@ df2.muscle <- data.frame(
 chi.test.muscle <- rbind(df1.muscle,df2.muscle)
 chisq.test(chi.test.muscle$Surface, chi.test.muscle$MuscleInjury, correct=FALSE)
 
-
-
 df1.up <- data.frame(
   UpInjury = c(rep("Injured", 24), rep("Not-Injured", 13656)),
   Surface = c(rep("Field Turf", 13680))
@@ -1593,8 +1309,6 @@ df2.up <- data.frame(
 
 chi.test.up <- rbind(df1.up,df2.up)
 chisq.test(chi.test.up$Surface, chi.test.up$UpInjury, correct=FALSE)
-
-
 
 ###Hybrid VS Others###
 df1.joint <- data.frame(
@@ -1610,7 +1324,6 @@ df2.joint <- data.frame(
 chi.test.joint <- rbind(df1.joint,df2.joint)
 chisq.test(chi.test.joint$Surface, chi.test.joint$JointInjury, correct=FALSE)
 
-
 df1.lowerlimb <- data.frame(
   LowerLimbInjury = c(rep("Injured", 35), rep("Not-Injured", 4221)),
   Surface = c(rep("Hybrid", 4256))
@@ -1624,7 +1337,6 @@ df2.lowerlimb <- data.frame(
 chi.test.lowerlimb <- rbind(df1.lowerlimb,df2.lowerlimb)
 chisq.test(chi.test.lowerlimb$Surface, chi.test.lowerlimb$LowerLimbInjury, correct=FALSE)
 
-
 df1.muscle <- data.frame(
   MuscleInjury = c(rep("Injured", 24), rep("Not-Injured", 4232)),
   Surface = c(rep("Hybrid", 4256))
@@ -1637,8 +1349,6 @@ df2.muscle <- data.frame(
 
 chi.test.muscle <- rbind(df1.muscle,df2.muscle)
 chisq.test(chi.test.muscle$Surface, chi.test.muscle$MuscleInjury, correct=FALSE)
-
-
 
 df1.up <- data.frame(
   UpInjury = c(rep("Injured", 9), rep("Not-Injured", 4247)),
