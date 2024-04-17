@@ -1,17 +1,18 @@
+####Inputting Weather Data to Fixtures####
+####Niall Gallagher#######
 library(dplyr)
 library(lubridate)
 library(readxl)
 library(tidyverse)
 library(plyr)
 
-#Load in dataset
+#Load in Fixture dataset
 mls.fixtures = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/Match_Updated.xlsx',guess_max = 100000)
 
 #Filter Fixtures after 2012
 #mls.fixtures.new <- filter(mls.fixtures, year >= 2012)
-
 #mls.fixtures.new <- mls.fixtures.new[ c(1:6,8) ]
-
+#Changing Dates and time format for merging purposes
 mls.fixtures$time <- substr(mls.fixtures$Time, 12, 16)
 
 mls.fixtures$Date <- as.character(mls.fixtures$Date)
@@ -60,28 +61,9 @@ mls.fixtures$Venue[mls.fixtures$Venue == 'Maureen Hendricks Field Maryland Socce
 
 mls.fixtures$Venue[mls.fixtures$Venue == 'Navy–Marine Corps Memorial Stadium'] <- 'Navy-Marine Corps Memorial Stadium'
 
-#Changing 
-# mls.fixtures.new$month <- sub('.*,', '', mls.fixtures.new$date)
-# 
-# mls.fixtures.new$month <- strsplit(paste(mls.fixtures.new$month, collapse=', '), ' ')[[1]]     
-# 
-# mls.fixtures.new$date2 <- paste(mls.fixtures.new$month,mls.fixtures.new$year)
-# 
-# mls.fixtures.new <- mls.fixtures.new %>% 
-#   mutate(converted_date = parse_date_time(date2, 
-#                                           orders = c("mdy", "dmy", "ymd")))
-# 
-# mls.fixtures.final <- mls.fixtures.new[ c(1:3,6,7,10) ]
-# 
-# colnames(mls.fixtures.final)[4] ="time"
-# 
-# mls.fixtures.final$converted_date <- as.character(mls.fixtures.final$converted_date)
-
 mls.fixtures.dates <- sort(unique(mls.fixtures$Date))
 
 #trial <- left_join(mls.fixtures, Allianz.weather, by=c('Venue'='Stadium', 'time'='time','Date'='date'))
-
-
 
 #Allianz Field Weather Stadium Number:1
 Allianz.weather = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Weather/AllianzField.xlsx')
@@ -92,15 +74,10 @@ Allianz.weather$time <- substr(Allianz.weather$time, 12, 16)
 
 Allianz.weather <- subset(Allianz.weather, date %in% mls.fixtures.dates)
 
-#trial <- left_join(mls.fixtures, weatherstadium2, by=c('Venue'='Stadium', 'time'='time','Date'='date'))
-
-#trial2 <- left_join(trial, mls.stadiums, by=c('Venue'='Stadium Name'))
-
 sum(is.na(trial2$Roof))
 
 print("Location of missing values in runs column") 
 which(is.na(trial2$Roof)) 
-
 
 #Audi Field Weather Stadium Number:2
 Audi.weather = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Weather/AudiField.xlsx')
@@ -111,21 +88,6 @@ Audi.weather$time <- substr(Audi.weather$time, 12, 16)
 
 Audi.weather <- subset(Audi.weather, date %in% mls.fixtures.dates)
 
-
-#colnames(trial3)
-
-#trial2 <- left_join(trial, Audi.weather, by=c('Venue'='Stadium', 'time'='time','Date'='date', 'temperature_2m (°C)'='temperature_2m (°C)',
-#                                               'relative_humidity_2m (%)'= 'relative_humidity_2m (%)','dew_point_2m (°C)' = 'dew_point_2m (°C)',
-#                                               'apparent_temperature (°C)' = 'apparent_temperature (°C)','precipitation (mm)' = 'precipitation (mm)',
-#                                               'rain (mm)'='rain (mm)','snowfall (cm)'='snowfall (cm)','cloud_cover (%)'= 'cloud_cover (%)',
-#                                               'wind_speed_10m (km/h)'='wind_speed_10m (km/h)','soil_temperature_0_to_7cm (°C)' = 'soil_temperature_0_to_7cm (°C)',
-#                                               'soil_moisture_0_to_7cm (m³/m³)' = 'soil_moisture_0_to_7cm (m³/m³)','is_day ()'='is_day ()'))
-
-#weatherstadium2 <- rbind(Audi.weather,Allianz.weather)
-
-
-#test23 <- left_join(mls.fixtures, weatherstadium2, by=c('Venue'='Stadium'))
-
 #BBVA Weather Stadium Number:3
 BBVA.weather = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Weather/BBVAStadium.xlsx')
 
@@ -135,10 +97,9 @@ BBVA.weather$time <- substr(BBVA.weather$time, 12, 16)
 
 BBVA.weather <- subset(BBVA.weather, date %in% mls.fixtures.dates)
 
-
+#Binding Data Together
 Stadium3 <- rbind(BBVA.weather,Allianz.weather,Audi.weather)
 #trial <- left_join(mls.fixtures, Stadium3, by=c('Venue'='Stadium', 'time'='time','Date'='date'))
-
 
 #BC Place Stadium Number:4
 BCPlace.weather = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Weather/BCPlace.xlsx')
@@ -148,7 +109,6 @@ BCPlace.weather$date <- substr(BCPlace.weather$time, 1, 10)
 BCPlace.weather$time <- substr(BCPlace.weather$time, 12, 16)
 
 BCPlace.weather <- subset(BCPlace.weather, date %in% mls.fixtures.dates)
-
 
 #Stadium4 <- rbind(BBVA.weather,Allianz.weather,Audi.weather,BCPlace.weather)
 #trial <- left_join(mls.fixtures, Stadium4, by=c('Venue'='Stadium', 'time'='time','Date'='date'))
@@ -174,9 +134,6 @@ BMO.weather$date <- substr(BMO.weather$time, 1, 10)
 BMO.weather$time <- substr(BMO.weather$time, 12, 16)
 
 BMO.weather <- subset(BMO.weather, date %in% mls.fixtures.dates)
-
-
-
 
 #Bobby Dodd Stadium Number:7
 BbD.weather = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Weather/BobbyDoddStadium.xlsx')
@@ -847,8 +804,6 @@ sum(is.na(Stadium46$`is_day ()`))
 
 clipr::write_clip(fixture.final)
 
-
-
 #Joining Stadiums into Fixtures Data
 stadiums = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/Stadiums.xlsx')
 
@@ -934,12 +889,5 @@ agg_tbl
 
 agg_df <- aggregate(fixtures$Surface, by=list(fixtures$Season_End_Year,fixtures$Surface), FUN=length)
 
-#Line Chart of Graph
-library(ggplot2)
-library(dplyr)
-library(hrbrthemes)
-library(viridis)
-
 don <- agg_df %>% 
   filter(Group.2 %in% c("Field Turf", "Grass"))
-
