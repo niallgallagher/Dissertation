@@ -1,8 +1,10 @@
-#Date 24/11/2023
+####Injury Data Cleansing####
+####Niall Gallagher#######
 library(dplyr)
 library(tidyverse)
 library(readxl)
 
+#Loading and Merging Injury of player Data in the League over the last 12 Seasons
 #Load 2012 MLS Players
 mls.players.injury.2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/injury/league2012injuryplayers.xlsx')
 
@@ -92,9 +94,10 @@ mls.injury.players2012_23.final2 <- mls.injury.players2012_23.final
 
 mls.injury.players2012_23.final2$injured_until <- as.Date('2023-10-30')
 
-
+#Filtering Data based on Injured Until
 test <- filter(mls.injury.players2012_23.final,is.na(injured_until))
 
+#Set Injuries that are Current to Present Date which was 30/10/2023
 test$injured_until <- as.Date('2023-10-30')
 
 test <- test %>% mutate(club = ifelse(is.na(club), 'Unknown', club))
@@ -115,24 +118,24 @@ clipr::write_clip(mls.injury.players2012_23.final)
 #Load All Injuries
 mls.players.injury = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/InjuriesPlayers2012_2023.xlsx')
 
-#Need to refence player Careers and Player Key
+#Need to reference player Careers and Player Key
 playerkey = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/PlayerKey.xlsx')
 
 playerCareer = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/PlayerCareer.xlsx')
 
-#Need to reduce dataset
+#Reducing dataset
 PlayerSeasons <- playerCareer[,c(1:3,32:34)]
 
 PlayerSeasons$SeasonYear <- substr(PlayerSeasons$Season, 1, 4)
 
 mls.players.injury$SeasonYear <- substr(mls.players.injury$injured_since, 1, 4)
 
-
+#Merging Injuries with the player Key
 test <- PlayerSeasons %>% left_join( playerkey, 
                              by=c('player_url' = 'UrlFBref'))
 
+#Joining Data Based on Id and Year
 #test <- left_join(PlayerSeasons, playerkey)
-
 #test <- merge(PlayerSeasons,playerkey, all.x=TRUE)
 
 test2 <- test %>% left_join(mls.players.injury, 
@@ -148,9 +151,7 @@ mlsinjuries.update <- test4[,c(1,2,4,5,7,9,10,11,16:21)]
 
 injury.type <- sort(unique(mlsinjuries.update$injury))
 
-
 clipr::write_clip(injury.type)
-
 
 sum(!complete.cases(mlsinjuries.update$duration))
 
@@ -158,6 +159,7 @@ mlsinjuries.update$DaysInjured <-sub(" days*", "", mlsinjuries.update$duration)
 
 mlsinjuries.update$DaysInjured <- as.numeric(mlsinjuries.update$DaysInjured)
 
+#Injuries Being Categorised based on UEFA severity
 mlsinjuries.update2 <- mlsinjuries.update %>%
   add_column(`No-Time-Loss` = NA,
              `Slight (1-3 Days)` = NA,
@@ -175,9 +177,7 @@ mlsinjuries.update2$`Moderate (8-28 Days)` <- ifelse(mlsinjuries.update2$DaysInj
 
 mlsinjuries.update2$`Major (28+ Days)` <- ifelse(mlsinjuries.update2$DaysInjured > 28, 1,0)
 
-
 clipr::write_clip(mlsinjuries.update2)
-
 
 #Load Injuries Data 
 mls.players.injury = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/MLsInjuries.xlsx')
@@ -216,7 +216,6 @@ remove <- c('Appendectomy',
 #remove rows that contain any string in the vector in the team column
 mls.players.injury.reduce <- mls.players.injury[!grepl(paste(remove, collapse='|'), mls.players.injury$injury),]
 
-
 rep_str = c('ankle sprain'= 'Ankle sprain',
 'bruise' = 'Bruise', 
 'collapsed lung'= 'Collapsed lung', 
@@ -238,4 +237,3 @@ rep_str = c('ankle sprain'= 'Ankle sprain',
 'unknown injury'= 'Unknown injury')
 
 mls.players.injury.reduce$injury <- str_replace_all(mls.players.injury.reduce$injury, rep_str)
-
