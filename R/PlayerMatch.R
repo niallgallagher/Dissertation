@@ -5,93 +5,8 @@ library(worldfootballR)
 library(eatTools)
 library(readxl)
 
-big5_player_possession <- fb_big5_advanced_season_stats(season_end_year= 2021, stat_type= "possession", team_or_player= "player")
-dplyr::glimpse(big5_player_possession)
-
-fleetwood_standard_stats <- fb_team_player_stats(team_urls= "https://fbref.com/en/squads/d6a369a2/Fleetwood-Town-Stats", stat_type= 'standard')
-dplyr::glimpse(fleetwood_standard_stats)
-
-#Store Players Urls that played in a given season
-#2012
-mls_2012_team_urls <- fb_teams_urls("https://fbref.com/en/comps/22/2012/2012-Major-League-Soccer-Stats")
-
-mls_2012.Players <- fb_team_player_stats(team_urls = mls_2012_team_urls, stat_type= 'standard')
-
-avector2012 <- as.vector(mls_2012.Players['PlayerURL'])
-
-avector2012$PlayerURL[1]
-
-# ederson_summary <- fb_player_match_logs("https://fbref.com/en/players/3bb7b8b4/Ederson", season_end_year = 2019, stat_type = 'summary')
-# dplyr::glimpse(ederson_summary)
-
-
-mls2012_summary <- fb_player_match_logs(avector2012$PlayerURL[1], season_end_year = 2012, stat_type = 'summary')
-
-# Create a sample vector
-my_vector <- c(1, 2, 3, 4, 5)
-
-# Initialize an empty data frame to store results
-result_df <- data.frame(index = integer(), value = numeric())
-
-# Using a for loop to iterate through the vector and store results in the data frame
-for (i in 1:length(my_vector)) {
-  result_df <- rbind(result_df, data.frame(index = i, value = my_vector[i]))
-}
-
-# Print the resulting data frame
-print(result_df)
-
-
-
-for (i in 1:length(avector2012$PlayerURL)) {
-  result_df <- fb_player_match_logs(avector2012$PlayerURL[i],season_end_year = 2012, stat_type = 'summary')
-}
-
-df = data.frame()
-
-for (i in 1:length(avector2012$PlayerURL)) {
-  output = fb_player_match_logs(avector2012$PlayerURL[i],season_end_year = 2012, stat_type = 'summary')
-  
-  df = rbind(df,output)
-}
-
-colnames(df) <- c("Player","Season","Date","Day","Comp","Round","Venue","Result","Squad",
-                  "Opponent","Start","Pos","Min","Gls_Performance","Ast_Performance","Pk_Performance","Pkatt_Performance",
-                  "Sh_Performance","SoT_Performance","CrdY_Performance","CrdR_Performance","Fls_Performance","Fld_Performance",
-                  "Off_Performance","Crs_Performance","TkIW_Performance","TkIW_Performance","Int_Performance",
-                  "OG_Performance","PKwon_Performance","PKcon_Performance")
-
-
-
-
-####
-mls2012.season.stats <- fb_player_season_stats(avector2012, stat_type =  "playing_time")
-
-
-
-
-df2 = data.frame()
-
-for (i in 1:length(avector2012$PlayerURL)) {
-  output = fb_player_season_stats(avector2012$PlayerURL[i],stat_type =  "playing_time")
-  
-  df2 = rbind(df2,output)
-}
-
-
- multiple_playing_time <- fb_player_season_stats(player_url = c("https://fbref.com/en/players/d70ce98e/Lionel-Messi",
-                                                 "https://fbref.com/en/players/dea698d9/Cristiano-Ronaldo"),
-                                  stat_type = "playing_time")
- 
- 
-vela_primary <- fb_player_scouting_report(player_url = "https://fbref.com/en/players/e0cd04e0/Carlos-Vela", pos_versus = "primary")
- 
-
-##Official Script of Code Above
-#Scrapping Player match data 
-library(dplyr)
-library(tidyverse)
-library(worldfootballR)
+####**Please Note Data is Scrapped Year Per Year and Takes 1 hour to Run Per Year#####
+###Data being scrapped is Player fixtures on a Match and Seasonal Level
 
 #2012 storing Players that Plat MLS That Year
 mls_2012_team_urls <- fb_teams_urls("https://fbref.com/en/comps/22/2012/2012-Major-League-Soccer-Stats")
@@ -125,23 +40,6 @@ for (i in 1:length(avector2012$PlayerURL)) {
 MLS.Player.Season.2012 <- df.season
 
 clipr::write_clip(MLS.Player.Season.2012)
-
-
-#2012 Players Scout Data
-# df.possession = data.frame()
-# 
-# for (i in 1:length(avector2012$PlayerURL)) {
-#   output = fb_player_season_stats(player_url = avector2012$PlayerURL[i], stat_type = "possession")
-#   
-#   df.possession = bind_rows(df.possession,output)
-# }
-# 
-# MLS.Player.Season.2012 <- df
-# 
-# MLS.Player.Scout.2012 <- df
-
-
-#mo_shooting <- fb_player_season_stats("https://fbref.com/en/players/e342ad68/Mohamed-Salah", stat_type = 'passing')
 
 #2013 MLS Players
 mls_2013_team_urls <- fb_teams_urls("https://fbref.com/en/comps/22/2013/2013-Major-League-Soccer-Stats")
@@ -345,7 +243,6 @@ for (i in 1:length(avector2016$PlayerURL)) {
   Sys.sleep(1)
 }
 
-
 length(unique(mls_2016.Players$Player))
 
 length(unique(df.season2016$player_name))
@@ -357,12 +254,6 @@ clipr::write_clip(MLS.Player.Game.2016)
 
 #2016 MLS Season Breakdown 
 df.season2016 = data.frame()
-
-# for (i in 1:length(avector2016$PlayerURL)) {
-#   output = fb_player_season_stats(player_url = avector2016$PlayerURL[i], stat_type = "playing_time")
-#   
-#   df.season2016 = bind_rows(df.season2016,output)
-# }
 
 for (i in 1:length(avector2016$PlayerURL)) {
   tryCatch({
@@ -380,8 +271,6 @@ MLS.Player.Season.2016 <- df.season2016
 
 clipr::write_clip(MLS.Player.Season.2016)
 
-
-#clipr::write_clip(MLS.Player.Season.2015)
 
 #2017 MLS Players Game Breakdown. 
 mls_2017_team_urls <- fb_teams_urls("https://fbref.com/en/comps/22/2017/2017-Major-League-Soccer-Stats")
@@ -408,7 +297,6 @@ for (i in 1:length(avector2017part2)) {
   })
   Sys.sleep(1)
 }
-
 
 
 length(unique(mls_2017.Players))
@@ -507,7 +395,7 @@ length(unique(df.season2018$player_name))
 clipr::write_clip(df.season2018)
 
 
-#2019 MLS Players Game Breakdown. 
+#2019 MLS Players Game Breakdown. Please Note 2019 onwards was split in 2 parts due to large Player pool.
 mls_2019_team_urls <- fb_teams_urls("https://fbref.com/en/comps/22/2019/2019-Major-League-Soccer-Stats")
 
 mls_2019.Players <- fb_team_player_stats(team_urls = mls_2019_team_urls, stat_type= 'standard')
@@ -765,8 +653,8 @@ for (i in 1:length(avector2022part2)) {
   Sys.sleep(1)
 }
 
-ederson_summary <- fb_player_match_logs("https://fbref.com/en/players/ec730d9a/Russell-Canouse", season_end_year = 2022, stat_type = 'summary')
-ederson_summary2 <- fb_player_match_logs("https://fbref.com/en/players/1bb2acce/Paul-Arriola", season_end_year = 2022, stat_type = 'summary')
+Russelln_summary <- fb_player_match_logs("https://fbref.com/en/players/ec730d9a/Russell-Canouse", season_end_year = 2022, stat_type = 'summary')
+Arriolan_summary2 <- fb_player_match_logs("https://fbref.com/en/players/1bb2acce/Paul-Arriola", season_end_year = 2022, stat_type = 'summary')
 
 length(unique(mls_2022.Players$Player))
 
@@ -870,9 +758,11 @@ length(unique(df.season2023$player_name))
 
 clipr::write_clip(df.season2023)
 
-#################################
+
+
+
+###############Merging Seasons Together##################
 #Binding My Data Together Player's Seasons
-library(readxl)
 #2012
 #Load 2012 MLS Players
 mls.players.season.2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2012PlayerSeason.xlsx')
@@ -919,7 +809,6 @@ mergeplayerseason2012.2017 <- rbind(mls.seasonsplayers2012_16, mls.players.seaso
 
 mls.seasonsplayers2012_17 <- mergeplayerseason2012.2017[!duplicated(mergeplayerseason2012.2017), ]
 
-
 #Load 2018 MLS Players
 mls.players.season.2018 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2018PlayerSeason.xlsx')
 
@@ -934,14 +823,12 @@ mergeplayerseason2012.2019 <- rbind(mls.seasonsplayers2012_18, mls.players.seaso
 
 mls.seasonsplayers2012_19 <- mergeplayerseason2012.2019[!duplicated(mergeplayerseason2012.2019), ]
 
-
 #Load 2020 MLS Players
 mls.players.season.2020 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2020PlayerSeason.xlsx')
 
 mergeplayerseason2012.2020 <- rbind(mls.seasonsplayers2012_19, mls.players.season.2020)
 
 mls.seasonsplayers2012_20 <- mergeplayerseason2012.2020[!duplicated(mergeplayerseason2012.2020), ]
-
 
 #Load 2021 MLS Players
 mls.players.season.2021 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2021PlayerSeason.xlsx')
@@ -957,7 +844,6 @@ mergeplayerseason2012.2022 <- rbind(mergeplayerseason2012.2021, mls.players.seas
 
 mls.seasonsplayers2012_22 <- mergeplayerseason2012.2022[!duplicated(mergeplayerseason2012.2022), ]
 
-
 #Load 2020 MLS Players
 mls.players.season.2023 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerSeasons/MLS2023PlayerSeason.xlsx')
 
@@ -971,25 +857,19 @@ mlscareer <- mls.seasonsplayers2012_23
 #   group_by(player_url)  %>%  
 # distinct(Season, Comp, .keep_all = TRUE)
 
-
 mlscareer2 <- mlscareer[-which(is.na(mlscareer$Comp)),]
 
 mlscareer2 <- mlscareer2[grepl("/", mlscareer2$player_url),]
 
 mlscareer2$PlayerId <- substr(mlscareer2$player_url, 30, 37)
 
-
-#*Note performing Cleanse of Data set
-library(dplyr)
-#library(plyr) 
-
+#*Note performing Cleanse of Data set#
 sort(unique(mlscareer$Season))
 
-
+#Added variables Season Number
 mlscareer2 <- mlscareer2 %>%
   group_by(player_url) %>%
   dplyr::mutate(SeasonNumber = dense_rank(Age))
-
 
 mlscareerfinal <- mlscareer2 %>%
   group_by(player_url) %>%
@@ -1015,7 +895,7 @@ print(result_df)
 
 clipr::write_clip(result_df)
 
-
+#Adding Season Mins and Merging Dataframes
 #Loading PlayerMatches 2012
 mls.players.games.2012 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2012.xlsx')
 
@@ -1169,7 +1049,6 @@ mls.players.games.2022 <- mls.players.games.2022 %>%
 
 mergeplayergames2012.2022 <- rbind(mergeplayergames2012.2021, mls.players.games.2022)
 
-
 #Load 2023 MLS Players
 mls.players.games.2023 = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Data/PlayerGame/PlayerSeasonMLS2023.xlsx')
 
@@ -1184,7 +1063,6 @@ mls.players.games.2023 <- mls.players.games.2023 %>%
 
 mergeplayergames2012.2023 <- rbind(mergeplayergames2012.2022, mls.players.games.2023)
 
-
 clipr::write_clip(mergeplayergames2012.2023)
 
 #Work On Player Key 
@@ -1192,36 +1070,32 @@ playerkey = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerKey.
 
 playerkey <- playerkey[order(playerkey$player_name),]
 
-
 playerfbref <- mls.seasonsplayers2012_23 %>% select(1,2)
 
-
+#remving Duplicates
 playerfbref <- trial[!duplicated(trial), ]
-
 
 trial <- dplyr::filter(playerfbref, grepl("/",player_url))
 
 playerfbref <- playerfbref[order(playerfbref$player_name),]
 
-
+#Copy data Frame
 clipr::write_clip(playerfbref)
 
 df2 <- playerkey %>% left_join( playerfbref, 
                              by=c('player_name'='player_name'))
 
-
 sapply(df2, function(x) sum(is.na(x)))
 
 sapply(playerkey, function(x) sum(is.na(x)))
 
-
+#Player Weights being Loaded and Joining to Data frames
 playerbio = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/PlayerWeight.xlsx')
 
 playerbio <- playerbio %>% 
   rename(PlayerTm = 1, DOBTm = 2)
 
 #playertest <- playerbio %>% select(1,2)
-
 
 test <- left_join(playerkey, playerbio, by='PlayerId','date_of_birth')
 
@@ -1243,55 +1117,41 @@ fixtures.games = read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Clean
 
 pitchsurface <- table(fixtures.games['Surface'])
 
-
 pitchsurface <- fixtures.games %>%
   group_by(Surface) %>%
   summarise(n = n()) %>%
   mutate(Freq = (n/sum(n)* 100))
 
-
-
-
-
-
-library(ggthemes)
-
-ggplot(Ancestry, aes(x = Year, y = Proportion, fill = Surface)) +
-  geom_col() +
-  geom_text(aes(label = paste0(Proportion, "%")),
-            colour = "white",
-            position = position_stack(vjust = 0.5)) +
-  theme_economist(base_size = 14) +
-  scale_fill_economist() +
-  theme(legend.position = "right", 
-        legend.title = element_text("Surface")) +
-  theme(axis.title.y = element_text(margin = margin(r = 20))) +
-  ylab("Percentage") +
-  xlab(NULL) +
-  labs(title = "Surface Type of MLS Picthes", subtitle = "\n Seasons From 2012 to 2023 ") +
-  scale_fill_manual(values = c("darkgreen", "#454B1B", "#228B22"))
-
-
-Ancestry <- data.frame(Surface = c("Field Turf", "Grass", "Hybrid"), 
-                       Proportion = c(23.8, 68.4, 7.8))
-
-Ancestry <- Ancestry %>% 
-  mutate(Year = "Surface Type")
-
-ggplot(Ancestry, aes(x = Year, y = Proportion, fill = Race)) +
-  geom_col() +
-  geom_text(aes(label = paste0(Proportion, "%")),
-            position = position_stack(vjust = 0.5)) +
-  scale_fill_brewer(palette = "Set2") +
-  theme_minimal(base_size = 16) +
-  ylab("Percentage") +
-  xlab(NULL)
-
-
-
-
-
-
-
-
-
+#Presentation Plot about Grass Breakdown in MLS
+# library(ggthemes)
+# 
+# ggplot(Ancestry, aes(x = Year, y = Proportion, fill = Surface)) +
+#   geom_col() +
+#   geom_text(aes(label = paste0(Proportion, "%")),
+#             colour = "white",
+#             position = position_stack(vjust = 0.5)) +
+#   theme_economist(base_size = 14) +
+#   scale_fill_economist() +
+#   theme(legend.position = "right", 
+#         legend.title = element_text("Surface")) +
+#   theme(axis.title.y = element_text(margin = margin(r = 20))) +
+#   ylab("Percentage") +
+#   xlab(NULL) +
+#   labs(title = "Surface Type of MLS Picthes", subtitle = "\n Seasons From 2012 to 2023 ") +
+#   scale_fill_manual(values = c("darkgreen", "#454B1B", "#228B22"))
+# 
+# 
+# Ancestry <- data.frame(Surface = c("Field Turf", "Grass", "Hybrid"), 
+#                        Proportion = c(23.8, 68.4, 7.8))
+# 
+# Ancestry <- Ancestry %>% 
+#   mutate(Year = "Surface Type")
+# 
+# ggplot(Ancestry, aes(x = Year, y = Proportion, fill = Race)) +
+#   geom_col() +
+#   geom_text(aes(label = paste0(Proportion, "%")),
+#             position = position_stack(vjust = 0.5)) +
+#   scale_fill_brewer(palette = "Set2") +
+#   theme_minimal(base_size = 16) +
+#   ylab("Percentage") +
+#   xlab(NULL)
