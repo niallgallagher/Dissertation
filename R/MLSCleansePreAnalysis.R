@@ -1,14 +1,15 @@
-####Analysis and Machine Learning MLS####
+####Pre-Cleanse Analysis####
 ####Niall Gallagher#######
 
-#Libaries
+#Libraries
 library(readxl)
 library(dplyr)
 library(lubridate)
 library(tidyr)
 library(tidyverse)
+library(data.table)
 
-###Read the CSV files######
+###Read the .xlsx files######
 Player.game.data <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/MLSPlayerGames.xlsx')
 
 Player.fixtures.data <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/MLSFixtures.xlsx')
@@ -19,39 +20,34 @@ Player.key.data <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/Cle
 
 #stadiums.data <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/stadiums.xlsx')
 
-#modify  injury date
+#modify injury date to merge transfermarkt and fbref
 Player.injury.data$injured_since <- as.Date(Player.injury.data$injured_since, format = '%Y-%m-%d') 
 
 Player.injury.data$injured_sincenew <- Player.injury.data$injured_since - days(1)
 
 Player.injury.data$injured_sincenew2 <- Player.injury.data$injured_since + days(1)
 
-
-
 Player.game.data <- Player.game.data %>% select(1:13,31,32)
-
 
 #Joining Data 
 Player.info.data.mod <- Player.info.data %>% left_join( Player.key.data, 
                                               by=c('URL'='URL',
                                                    'PlayerId' = 'PlayerId'))
 
-
-
 Player.game.modified <- Player.game.data %>% left_join(Player.info.data.mod, 
                                                        by=c('Player'='PlayerFBref'))
 
-
+#Modifying Date
 Player.game.modified$Date <- as.Date(Player.game.modified$Date, format = '%Y-%m-%d') 
 
-
+#Join Injury date with games
 Player.game.modified.inj <- Player.game.modified %>% left_join(Player.injury.data, 
                                                        by=c('URL'='URL',
                                                             'Date'='injured_since'))
 
 test <- Player.game.modified.inj[!is.na(Player.game.modified.inj$DaysInjured),]
 
-
+#Join New Injury date with games
 Player.game.modified.inj2 <- Player.game.modified %>% left_join(Player.injury.data, 
                                                                by=c('URL'='URL',
                                                                     'Date'='injured_sincenew'))
@@ -62,33 +58,9 @@ Player.game.modified.inj3 <- Player.game.modified %>% left_join(Player.injury.da
 
 test2 <- Player.game.modified.inj2[!is.na(Player.game.modified.inj2$DaysInjured),]
 
-
 test3 <- Player.game.modified.inj3[!is.na(Player.game.modified.inj3$DaysInjured),]
 
-
-
-
-#trial 
-
-# tolerance <- 3
-# 
-# trial2 <- Player.game.modified$Date
-# 
-# trial <- Player.injury.data$`Major (28+ Days)`
-# 
-# trial$date_range <- lapply(trial$injured_since, function(x) seq(x - tolerance, x + tolerance, by = "day"))
-# 
-# trial_expanded <- unnest(trial, date_range)
-# 
-# result <- left_join(trial_expanded, trial2, by = c("date_range" = "Date"))
-# 
-# result <- distinct(result, injured_since, `Major (28+ Days)`, date_range, .keep_all = TRUE)
-# 
-# 
-# test4 <- result[!is.na(result$),]
-
-#unique_strings <- unique(data.frame(Player.game.modified$Comp))
-
+#Modidy Injuries for MLS Games
 mls.player.games <- subset(Player.game.modified, Comp %in% c("MLS")) 
 
 mls.player.games <- mls.player.games %>% select(1,3,8,9,13:16,20:24,26,27)
@@ -187,16 +159,17 @@ Player.fixtures.data$Date <- as.Date(Player.fixtures.data$Date, format = '%Y-%m-
 mls.player.games$Date <- as.Date(mls.player.games$Date, format = '%Y-%m-%d') 
 
 #mls.player.games$Squad2 <- mls.player.games$Squad
-
+#Join Fixtures from injuries to Regular Fixtures
 Player.game.modified.fixtures <- mls.player.games %>% left_join(Player.fixtures.data, 
                                                                by=c('Squad'='Home',
                                                                     'Date'='Date')) %>%
                                                       left_join(Player.fixtures.data, 
                                                                   by = c('Squad' = 'Away', 'Date' = 'Date'
                                                                          ))
-
+#Removing Columns 
 Player.game.modified.fixtures <- select(Player.game.modified.fixtures, -26,-29,-60,-62)
 
+#Filing Values from Two Sources
 Player.game.modified.fixtures$Season_End_Year <- coalesce(Player.game.modified.fixtures$Season_End_Year.x, Player.game.modified.fixtures$Season_End_Year.y)
 
 Player.game.modified.fixtures$Round <- coalesce(Player.game.modified.fixtures$Round.x, Player.game.modified.fixtures$Round.y)
@@ -245,17 +218,13 @@ Player.game.modified.fixtures$`is_day ()` <- coalesce(Player.game.modified.fixtu
 
 Player.game.modified.fixtures$MatchURL <- coalesce(Player.game.modified.fixtures$MatchURL.x, Player.game.modified.fixtures$MatchURL.y)
 
-
+#Select Columns
 Player.game.modified.fixtures2 <- select(Player.game.modified.fixtures, 1:16,26,79:102)
 
-
-#
-
+#Keep All rows 
 df <- Player.game.modified.fixtures2[complete.cases(Player.game.modified.fixtures2$`soil_temperature_0_to_7cm (°C)`), ]
 
-
 df <- select(df, -16,-21)
-
 
 clipr::write_clip(df)
 
@@ -271,10 +240,10 @@ Player.injury.data <- Player.injury.data %>%
   mutate(InjuryCount = row_number()) %>%
   ungroup()
 
-
+#Player Data Date
 Player.mls.data <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/UpdatePlayerFix.xlsx')
 
-
+#MLS Date Format
 Player.mls.data$Date <- as.Date(Player.mls.data$Date, format = '%Y-%m-%d') 
 
 #unique_strings <- unique(data.frame(Player.injury.data$club))
@@ -298,15 +267,12 @@ Player.mls.data$Date <- as.Date(Player.mls.data$Date, format = '%Y-%m-%d')
 # Player.injury.data <- Player.injury.data %>%
 #   filter(as.integer(substring(injured_since, 1, 4)) > year_threshold)
 
-library(data.table)
 setDT(Player.mls.data)
 setDT(Player.injury.data)
 
 Player.injury.data$Date <- Player.injury.data$injured_since
 
-
-#Player.mls.data[Player.injury.data, on = .(URL, Date), roll = TRUE]
-
+#Rolling Dates of Injury data and Player Data
 test <- Player.mls.data[Player.injury.data, c("Date.y") := .(i.Date), on = .(URL, Date), roll = Inf]
 test2 <- Player.mls.data[Player.injury.data, c("Date.y") := .(i.Date), on = .(URL, Date), roll = -Inf]
 
@@ -322,7 +288,6 @@ test2$date_diff <- abs(test2$Date - test2$Date.y)
 
 clipr::write_clip(test)
 clipr::write_clip(test2)
-
 
 # test <- select(Player.mls.data, 2,13)
 # 
@@ -360,29 +325,28 @@ clipr::write_clip(test2)
 #                                                                         (sprintf("%02d", sample(2013:2015,20, rep=T))), sep="")),"%d%m%Y")), ValueMatch=sample(15:100, 20, rep=T))
 #  
 
-praktice <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/test.xlsx')
+#Reading Dataset Set to join 
+cleansed.dataset <- read_xlsx('C:/Users/niall/OneDrive/Documents/Dissertation/CleansedDatasets/test.xlsx')
 
-
-stage1 <- Player.injury.data %>% left_join(praktice, 
-                                                               by=c('URL'='URL',
-                                                                    'injured_since'='Date.y'))
+stage1 <- Player.injury.data %>% left_join(cleansed.dataset, 
+                                           by=c('URL'='URL',
+                                                'injured_since'='Date.y'))
+#Filter based on URL
 stage1 <- stage1 %>%
   filter(!is.na(MatchURL))
 
-
+#Join Based on URL
 final <- Player.mls.data %>% left_join(stage1, 
                                        by=c('URL'='URL',
                                             'MatchURL'='MatchURL'))
 
-
+#Select Columns for Final Dataset that encompasses all the dataset
 final.dataset <- select(final, 1,2:39,44,45,47:60 )
-
 
 final.dataset <- final.dataset %>%
   rename_with(~gsub("\\.x$", "", .), contains(".x"))
 
 clipr::write_clip(final.dataset)
-
 
 final.dataset.injury <- final.dataset %>%
   filter(!is.na(InjuryCount))
@@ -411,7 +375,6 @@ cleansingAnalysis <- distinct(cleansingAnalysis)
 clipr::write_clip(cleansingAnalysis)
 
 #final.dataset <- select(final, 1,2:39,44,45,47:60 )
-
 
 final.dataset <- final.dataset %>%
   filter(club %in% specific_clubs)
